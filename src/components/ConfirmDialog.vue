@@ -20,12 +20,13 @@
 
 <script lang="ts" setup>
 import { ref, onMounted, onUnmounted } from 'vue';
+import { i18n } from '@/hooks/useSiYuan';
 
 const isVisible = ref(false);
 const message = ref('');
-const title = ref('确认');
-const confirmText = ref('确认');
-const cancelText = ref('取消');
+const title = ref(i18n.value?.msg?.pleaseConfirm || '请确认');
+const confirmText = ref(i18n.value?.msg?.confirm || '确认');
+const cancelText = ref(i18n.value?.msg?.cancel || '取消');
 let resolveCallback: ((value: boolean) => void) | null = null;
 
 // 暴露给外部使用的方法
@@ -39,9 +40,9 @@ function showConfirm(
 ): Promise<boolean> {
   return new Promise((resolve) => {
     message.value = msg;
-    title.value = opts?.title || '确认';
-    confirmText.value = opts?.confirmText || '确认';
-    cancelText.value = opts?.cancelText || '取消';
+    title.value = opts?.title || i18n.value?.msg?.pleaseConfirm || '请确认';
+    confirmText.value = opts?.confirmText || i18n.value?.msg?.confirm || '确认';
+    cancelText.value = opts?.cancelText || i18n.value?.msg?.cancel || '取消';
     resolveCallback = resolve;
     isVisible.value = true;
   });

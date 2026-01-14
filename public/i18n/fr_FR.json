@@ -6,7 +6,12 @@
     "begin": "[Plug-in de calendrier]",
     "notNoteBook": "Impossible d'obtenir le bloc-notes actuel, veuillez le définir manuellement",
     "refreshing": "Actualisation, veuillez patienter",
-    "weeklyPathNotSet": "Erreur : le chemin des notes hebdomadaires n'est pas défini."
+    "weeklyPathNotSet": "Erreur : le chemin des notes hebdomadaires n'est pas défini.",
+    "confirmCreateDailyNote": "Le journal n'existe pas, voulez-vous le créer ?",
+    "failedToCreateWeeklyNote": "Échec de l'ouverture/création de la note hebdomadaire",
+    "confirm": "Confirmer",
+    "cancel": "Annuler",
+    "pleaseConfirm": "S'il vous plaît confirmer"
   },
   "position": {
     "title": "Position d'entrée du bouton",

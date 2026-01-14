@@ -6,7 +6,12 @@
     "begin": "[Calendar Plugin]",
     "notNoteBook": "Failed to get the current notebook, please set it manually",
     "refreshing": "Refreshing, please wait",
-    "weeklyPathNotSet": "Error: Weekly notes path is not set."
+    "weeklyPathNotSet": "Error: Weekly notes path is not set.",
+    "confirmCreateDailyNote": "Daily note does not exist. Create it?",
+    "failedToCreateWeeklyNote": "Failed to open/create weekly note",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "pleaseConfirm": "Please Confirm"
   },
   "position": {
     "title": "Button entrance position",

@@ -6,7 +6,12 @@
     "begin": "[日历插件]",
     "notNoteBook": "获取当前笔记本失败，请手动设置",
     "refreshing": "正在刷新，请稍候",
-    "weeklyPathNotSet": "错误: 没有设置周记存放路径。"
+    "weeklyPathNotSet": "错误: 没有设置周记存放路径。",
+    "confirmCreateDailyNote": "日记不存在，是否创建？",
+    "failedToCreateWeeklyNote": "创建/打开周记失败",
+    "confirm": "确认",
+    "cancel": "取消",
+    "pleaseConfirm": "请确认"
   },
   "position": {
     "title": "按钮入口位置",

@@ -6,7 +6,12 @@
     "begin": "[Complemento de calendario]",
     "notNoteBook": "No se pudo obtener el cuaderno actual, configúrelo manualmente",
     "refreshing": "Actualizando, por favor espere",
-    "weeklyPathNotSet": "Error: No se ha establecido la ruta de notas semanales."
+    "weeklyPathNotSet": "Error: No se ha establecido la ruta de notas semanales.",
+    "confirmCreateDailyNote": "La nota diaria no existe. ¿Crearla?",
+    "failedToCreateWeeklyNote": "Error al abrir/crear la nota semanal",
+    "confirm": "Confirmar",
+    "cancel": "Cancelar",
+    "pleaseConfirm": "Por favor confirma"
   },
   "position": {
     "title": "Posición de entrada del botón",

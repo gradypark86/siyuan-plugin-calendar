@@ -89,7 +89,7 @@ import dayjs from 'dayjs';
 import * as api from '@/api/api';
 import { openDoc } from '@/api/daily-note';
 import { useLocale, formatMsg } from '@/hooks/useLocale';
-import { eventBus, weekStart, showWeekNum, weeklyEnabled } from '@/hooks/useSiYuan';
+import { eventBus, weekStart, showWeekNum, weeklyEnabled, i18n } from '@/hooks/useSiYuan';
 import { CusNotebook } from '@/utils/notebook';
 import { refreshSql } from '@/api/utils';
 import ConfirmDialog from './ConfirmDialog.vue';
@@ -380,7 +380,7 @@ async function openDailyNote(date: Date) {
 
   try {
     // 显示确认对话框
-    const promptMsg = `${dateStr} 日记不存在, 是否创建?`;
+    const promptMsg = `${dateStr} ${i18n.value.msg.confirmCreateDailyNote}`;
     const ok = await confirmDialogRef.value.showConfirm(promptMsg);
 
     if (!ok) {
@@ -432,7 +432,7 @@ async function openWeeklyNote(week: { weekNum: number; days: dayjs.Dayjs[] }) {
     await api.pushMsg(formatMsg('weeklyPathNotSet'), 4000);
   } catch (e) {
     console.error('[calendar] openWeeklyNote error', e);
-    await api.pushErrMsg('Failed to open/create weekly note');
+    await api.pushErrMsg(formatMsg('failedToCreateWeeklyNote'));
   }
 }
 
