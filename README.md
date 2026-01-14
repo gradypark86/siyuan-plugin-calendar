@@ -2,7 +2,7 @@
 
 简体中文 \| [English](https://github.com/gradypark86/siyuan-plugin-calendar/blob/main/README_en_US.md)
 
-一个思源笔记日历面板插件，可以快速创建日记与周记.
+一个思源笔记日历面板插件，可以快速创建日记与周记。
 
 ![项目截图](https://imgs.pprain.space/2026/01/41d3d243f69952db7cf91a75d4963246.png)
 
