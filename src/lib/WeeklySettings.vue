@@ -1,0 +1,28 @@
+<template>
+  <div class="switch-container fn__flex-center">
+    <input 
+      type="checkbox" 
+      class="b3-switch" 
+      v-model="weeklyEnabled"
+      id="weekly-enabled-checkbox"
+    />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { weeklyEnabled } from '@/hooks/useSiYuan';
+</script>
+
+<style scoped>
+.switch-container {
+  width: 200px;
+  height: 32px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.b3-switch {
+  cursor: pointer;
+}
+</style>

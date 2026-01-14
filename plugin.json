@@ -1,0 +1,30 @@
+{
+  "name": "siyuan-plugin-calendar",
+  "author": "gradypark86",
+  "url": "https://github.com/gradypark86/siyuan-plugin-calendar",
+  "version": "0.1.0",
+  "minAppVersion": "2.13.0",
+  "backends": ["all"],
+  "frontends": ["all"],
+  "disabledInPublish": true,
+  "displayName": {
+    "zh_CN": "思源日历面板",
+    "default": "Siyuan Calendar Panel"
+  },
+  "description": {
+    "zh_CN": "在日历面板上快速新建或转到日记与周记",
+    "default": "Quickly create a new or go to diary or weekly notes on the calendar panel"
+  },
+  "readme": {
+    "zh_CN": "README.md",
+    "default": "README_en_US.md"
+  },
+  "keywords": [
+    "calendar",
+    "日历",
+    "日记",
+    "daily",
+    "weekly",
+    "周记"
+  ]
+}

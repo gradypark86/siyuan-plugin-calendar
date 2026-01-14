@@ -1,0 +1,34 @@
+{
+  "openCalendar": "打开日历",
+  "tabName": "日历",
+  "placeholder": "选择笔记本...",
+  "msg": {
+    "begin": "[日历插件]",
+    "notNoteBook": "获取当前笔记本失败，请手动设置",
+    "refreshing": "正在刷新，请稍候",
+    "weeklyPathNotSet": "错误: 没有设置周记存放路径。"
+  },
+  "position": {
+    "title": "按钮入口位置",
+    "topLeft": "顶栏左",
+    "topRight": "顶栏右",
+    "dock": "边栏"
+  }
+
+  ,"weekStart": {
+    "title": "一周开始于",
+    "sunday": "周日",
+    "monday": "周一"
+  }
+
+  ,"showWeekNum": {
+    "title": "显示周号"
+  }
+  ,"weekly": {
+    "enable": "周记开关",
+    "pathLabel": "周记存放路径",
+    "templateLabel": "周记模板路径",
+    "pathHint": "可使用日期格式模板变量，例如 /Daily Notes/{{now | date \"2006/01\"}}/{{now | date \"2006\"}}-W{{weekly}}，{{weekly}} 为周号。",
+    "templateHint": "例如 weekly-template.md，需要将该文件放置于工作空间/data/templates/ 下。留空则不渲染模板。"
+  }
+}

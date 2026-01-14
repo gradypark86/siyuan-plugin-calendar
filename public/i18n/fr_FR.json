@@ -1,0 +1,32 @@
+{
+  "openCalendar": "calendrier ouvert",
+  "tabName": "Calendrier",
+  "placeholder": "Sélectionnez le bloc-notes...",
+  "msg": {
+    "begin": "[Plug-in de calendrier]",
+    "notNoteBook": "Impossible d'obtenir le bloc-notes actuel, veuillez le définir manuellement",
+    "refreshing": "Actualisation, veuillez patienter",
+    "weeklyPathNotSet": "Erreur : le chemin des notes hebdomadaires n'est pas défini."
+  },
+  "position": {
+    "title": "Position d'entrée du bouton",
+    "topLeft": "En haut à gauche",
+    "topRight": "En haut à droite",
+    "dock": "Dock"
+  }
+
+  ,"weekStart": {
+    "title": "La semaine commence le",
+    "sunday": "Dimanche",
+    "monday": "Lundi"
+  }
+
+  ,"showWeekNum": {
+    "title": "Afficher le numéro de semaine"
+  }
+  ,"weekly": {
+    "enable": "Activer les notes hebdomadaires",
+    "pathLabel": "Chemin des notes hebdomadaires",
+    "templateLabel": "Chemin du modèle hebdomadaire"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "openCalendar": "calendario abierto",
+  "tabName": "Calendario",
+  "placeholder": "Seleccionar libreta...",
+  "msg": {
+    "begin": "[Complemento de calendario]",
+    "notNoteBook": "No se pudo obtener el cuaderno actual, configúrelo manualmente",
+    "refreshing": "Actualizando, por favor espere",
+    "weeklyPathNotSet": "Error: No se ha establecido la ruta de notas semanales."
+  },
+  "position": {
+    "title": "Posición de entrada del botón",
+    "topLeft": "Arriba izquierda",
+    "topRight": "Arriba derecha",
+    "dock": "muelle"
+  }
+
+  ,"weekStart": {
+    "title": "La semana comienza el",
+    "sunday": "Domingo",
+    "monday": "Lunes"
+  }
+
+  ,"showWeekNum": {
+    "title": "Mostrar número de semana"
+  }
+  ,"weekly": {
+    "enable": "Habilitar notas semanales",
+    "pathLabel": "Ruta de notas semanales",
+    "templateLabel": "Ruta de plantilla semanal"
+  }
+}

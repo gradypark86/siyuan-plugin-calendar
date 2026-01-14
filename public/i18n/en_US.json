@@ -1,0 +1,34 @@
+{
+  "openCalendar": "open calendar",
+  "tabName": "Calendar",
+  "placeholder": "Select notebook...",
+  "msg": {
+    "begin": "[Calendar Plugin]",
+    "notNoteBook": "Failed to get the current notebook, please set it manually",
+    "refreshing": "Refreshing, please wait",
+    "weeklyPathNotSet": "Error: Weekly notes path is not set."
+  },
+  "position": {
+    "title": "Button entrance position",
+    "topLeft": "Top left",
+    "topRight": "Top right",
+    "dock": "Dock"
+  }
+
+  ,"weekStart": {
+    "title": "Week starts on",
+    "sunday": "Sunday",
+    "monday": "Monday"
+  }
+
+  ,"showWeekNum": {
+    "title": "Show week number"
+  }
+  ,"weekly": {
+    "enable": "Enable weekly notes",
+    "pathLabel": "Weekly notes path",
+    "templateLabel": "Weekly template path",
+    "pathHint": "You can use date template variables, e.g. /Daily Notes/{{now | date \"2006/01\"}}/{{now | date \"2006\"}}-W{{weekly}} — {{weekly}} is the week number.",
+    "templateHint": "e.g. weekly-template.md — place this file under workspace/data/templates/. Leave empty to skip template rendering."
+  }
+}
