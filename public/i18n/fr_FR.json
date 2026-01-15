@@ -38,6 +38,8 @@
   ,"weekly": {
     "enable": "Activer les notes hebdomadaires",
     "pathLabel": "Chemin des notes hebdomadaires",
-    "templateLabel": "Chemin du modèle hebdomadaire"
+    "templateLabel": "Chemin du modèle hebdomadaire",
+    "pathHint": "Vous pouvez utiliser des variables de modèle de date, p.ex. /Daily Notes/{{now | date \"2006/01\"}}/{{now | date \"2006\"}}-W{{weekly}} — {{weekly}} est le numéro de la semaine.",
+    "templateHint": "p.ex. weekly-template.md — placez ce fichier dans workspace/data/templates/. Laisser vide pour ne pas rendre le modèle."
   }
 }

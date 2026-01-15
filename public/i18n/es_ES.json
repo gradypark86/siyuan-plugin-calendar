@@ -38,6 +38,8 @@
   ,"weekly": {
     "enable": "Habilitar notas semanales",
     "pathLabel": "Ruta de notas semanales",
-    "templateLabel": "Ruta de plantilla semanal"
+    "templateLabel": "Ruta de plantilla semanal",
+    "pathHint": "Puede usar variables de plantilla de fecha, p. ej. /Daily Notes/{{now | date \"2006/01\"}}/{{now | date \"2006\"}}-W{{weekly}} — {{weekly}} es el número de la semana.",
+    "templateHint": "p. ej. weekly-template.md — coloque este archivo en workspace/data/templates/. Dejar vacío para omitir la renderización."
   }
 }
