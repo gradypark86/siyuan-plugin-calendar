@@ -12,6 +12,8 @@ jobs:
       # Checkout
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       # Install Node.js
       - name: Install Node.js
@@ -52,6 +54,39 @@ jobs:
       - name: Build for production
         run: pnpm build
 
+      - name: Get tags and previous tag
+        id: get_tags
+        shell: bash
+        run: |
+          # ensure tags are fetched
+          git fetch --prune --unshallow --tags 2>/dev/null || git fetch --prune --tags
+          CURRENT_TAG=${GITHUB_REF#refs/tags/}
+          # get the previous tag by creation date (the tag before current)
+          PREV_TAG=$(git tag --sort=-creatordate | sed -n '2p' || true)
+          echo "CURRENT_TAG=$CURRENT_TAG" >> $GITHUB_ENV
+          echo "PREV_TAG=$PREV_TAG" >> $GITHUB_ENV
+          echo "current_tag=$CURRENT_TAG"
+          echo "prev_tag=$PREV_TAG"
+
+      - name: Generate changelog
+        id: changelog
+        shell: bash
+        run: |
+          CURRENT_TAG=${CURRENT_TAG}
+          PREV_TAG=${PREV_TAG}
+          if [ -z "$PREV_TAG" ]; then
+            # no previous tag found — include recent commits (limit 100)
+            git log --pretty=format:'- %s (%an)' -n 100 > changelog.txt || true
+          else
+            git log "$PREV_TAG..$CURRENT_TAG" --pretty=format:'- %s (%an)' > changelog.txt || true
+          fi
+          if [ ! -s changelog.txt ]; then
+            echo "- (no commits found)" > changelog.txt
+          fi
+          echo "body<<EOF" >> $GITHUB_OUTPUT
+          cat changelog.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Release
         uses: ncipollo/release-action@v1
         with:
@@ -60,3 +95,4 @@ jobs:
           artifacts: 'package.zip'
           token: ${{ secrets.GITHUB_TOKEN }}
           prerelease: false
+          body: ${{ steps.changelog.outputs.body }}
