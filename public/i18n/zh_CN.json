@@ -12,6 +12,12 @@
     "confirm": "确认",
     "cancel": "取消",
     "pleaseConfirm": "请确认"
+    ,
+    "createdDailyNote": "已创建日记",
+    "createDailyNoteFailed": "创建日记失败"
+    ,
+    "createdWeeklyNote": "已创建周记",
+    "createWeeklyNoteFailed": "创建周记失败"
   },
   "position": {
     "title": "按钮入口位置",

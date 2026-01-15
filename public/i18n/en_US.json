@@ -12,6 +12,12 @@
     "confirm": "Confirm",
     "cancel": "Cancel",
     "pleaseConfirm": "Please Confirm"
+    ,
+    "createdDailyNote": "Daily note created",
+    "createDailyNoteFailed": "Failed to create daily note"
+    ,
+    "createdWeeklyNote": "Weekly note created",
+    "createWeeklyNoteFailed": "Failed to create weekly note"
   },
   "position": {
     "title": "Button entrance position",

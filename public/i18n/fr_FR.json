@@ -12,6 +12,12 @@
     "confirm": "Confirmer",
     "cancel": "Annuler",
     "pleaseConfirm": "S'il vous plaît confirmer"
+    ,
+    "createdDailyNote": "Journal créé",
+    "createDailyNoteFailed": "Échec de la création du journal"
+    ,
+    "createdWeeklyNote": "Note hebdomadaire créée",
+    "createWeeklyNoteFailed": "Échec de la création de la note hebdomadaire"
   },
   "position": {
     "title": "Position d'entrée du bouton",

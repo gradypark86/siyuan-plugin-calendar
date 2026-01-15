@@ -389,11 +389,22 @@ async function openDailyNote(date: Date) {
     }
 
     // 创建日报
-    const dailyNote = await notebook.value.createDailyNote(date.toDate());
-    const { id } = dailyNote;
-
-    openDoc(id); // 打开新建的日记
-    existDailyNotesMap.value.set(dateStr, id);
+    try {
+      const dailyNote = await notebook.value.createDailyNote(d.toDate());
+      if (!dailyNote || !dailyNote.id) {
+        // creation failed or returned invalid id
+        await api.pushErrMsg(formatMsg('createDailyNoteFailed'));
+        return;
+      }
+      const { id } = dailyNote;
+      openDoc(id); // 打开新建的日记
+      existDailyNotesMap.value.set(dateStr, id);
+      // notify success briefly
+      await api.pushMsg(formatMsg('createdDailyNote'), 2000);
+    } catch (e) {
+      console.error('[calendar] createDailyNote error', e);
+      await api.pushErrMsg(formatMsg('createDailyNoteFailed'));
+    }
   } finally {
     processingDates.delete(dateStr);
   }
@@ -424,6 +435,11 @@ async function openWeeklyNote(week: { weekNum: number; days: dayjs.Dayjs[] }) {
       const id = await nb.createWeeklyNote(repDay.toDate(), week.weekNum);
       if (id) {
         openDoc(id);
+        try {
+          await api.pushMsg(formatMsg('createdWeeklyNote'), 2000);
+        } catch (e) {
+          // ignore notification errors
+        }
         return;
       }
     }
