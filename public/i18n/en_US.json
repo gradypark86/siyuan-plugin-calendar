@@ -34,6 +34,10 @@
 
   ,"showWeekNum": {
     "title": "Show week number"
+  },
+  "settingsTabs": {
+    "basic": "Panel Settings",
+    "periodic": "Periodic Notes Settings"
   }
   ,"weekly": {
     "enable": "Enable weekly notes",
@@ -41,5 +45,19 @@
     "templateLabel": "Weekly template path",
     "pathHint": "You can use date template variables, e.g. /Daily Notes/{{now | date \"2006/01\"}}/{{now | date \"2006\"}}-W{{weekly}} — {{weekly}} is the week number.",
     "templateHint": "e.g. weekly-template.md — place this file under workspace/data/templates/. Leave empty to skip template rendering."
+  },
+  "monthly": {
+    "enable": "Enable monthly notes",
+    "pathLabel": "Monthly notes path",
+    "templateLabel": "Monthly template path",
+    "pathHint": "You can use date template variables, e.g. /Daily Notes/{{now | date \"2006/01\"}}.",
+    "templateHint": "e.g. monthly-template.md — place this file under workspace/data/templates/. Leave empty to skip template rendering."
+  },
+  "yearly": {
+    "enable": "Enable yearly notes",
+    "pathLabel": "Yearly notes path",
+    "templateLabel": "Yearly template path",
+    "pathHint": "You can use date template variables, e.g. /Daily Notes/Yearly/{{now | date \"2006\"}}.",
+    "templateHint": "e.g. yearly-template.md — place this file under workspace/data/templates/. Leave empty to skip template rendering."
   }
 }

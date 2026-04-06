@@ -1,12 +1,25 @@
 import App from './App.vue';
 import { createApp } from 'vue';
 import { Plugin, Menu, Setting, getFrontend } from 'siyuan';
-import { app, i18n, isMobile, eventBus, position, weekStart, showWeekNum, weeklyEnabled, weeklyPath, weeklyTemplatePath } from './hooks/useSiYuan';
-import SySelect from './lib/SySelect.vue';
-import WeekStartSelect from './lib/WeekStartSelect.vue';
-import ShowWeekNumToggle from './lib/ShowWeekNumToggle.vue';
-import WeeklySettings from './lib/WeeklySettings.vue';
-import WeeklyNoteGroup from './lib/WeeklyNoteGroup.vue';
+import {
+  app,
+  i18n,
+  isMobile,
+  eventBus,
+  position,
+  weekStart,
+  showWeekNum,
+  weeklyEnabled,
+  weeklyPath,
+  weeklyTemplatePath,
+  monthlyEnabled,
+  monthlyPath,
+  monthlyTemplatePath,
+  yearlyEnabled,
+  yearlyPath,
+  yearlyTemplatePath,
+} from './hooks/useSiYuan';
+import SettingsTabs from './lib/SettingsTabs.vue';
 import './index.less';
 import showMessage from 'siyuan';
 
@@ -33,7 +46,20 @@ export default class ArcoCalendarPlugin extends Plugin {
   private async init() {
     const data = await this.loadData(STORAGE_NAME);
     if (!data) {
-      await this.saveData(STORAGE_NAME, { position: 'top-left', weekStart: 1, showWeekNum: false, weeklyEnabled: false, weeklyPath: '', weeklyTemplatePath: '' });
+      await this.saveData(STORAGE_NAME, {
+        position: 'top-left',
+        weekStart: 1,
+        showWeekNum: false,
+        weeklyEnabled: false,
+        weeklyPath: '',
+        weeklyTemplatePath: '',
+        monthlyEnabled: false,
+        monthlyPath: '',
+        monthlyTemplatePath: '',
+        yearlyEnabled: false,
+        yearlyPath: '',
+        yearlyTemplatePath: '',
+      });
       await this.loadData(STORAGE_NAME);
       position.value = 'top-left';
       weekStart.value = 1;
@@ -41,6 +67,12 @@ export default class ArcoCalendarPlugin extends Plugin {
       weeklyEnabled.value = false;
       weeklyPath.value = '';
       weeklyTemplatePath.value = '';
+      monthlyEnabled.value = false;
+      monthlyPath.value = '';
+      monthlyTemplatePath.value = '';
+      yearlyEnabled.value = false;
+      yearlyPath.value = '';
+      yearlyTemplatePath.value = '';
     } else {
       position.value = data.position;
       if (data.weekStart !== undefined) {
@@ -57,6 +89,24 @@ export default class ArcoCalendarPlugin extends Plugin {
       }
       if (data.weeklyTemplatePath !== undefined) {
         weeklyTemplatePath.value = String(data.weeklyTemplatePath);
+      }
+      if (data.monthlyEnabled !== undefined) {
+        monthlyEnabled.value = Boolean(data.monthlyEnabled);
+      }
+      if (data.monthlyPath !== undefined) {
+        monthlyPath.value = String(data.monthlyPath);
+      }
+      if (data.monthlyTemplatePath !== undefined) {
+        monthlyTemplatePath.value = String(data.monthlyTemplatePath);
+      }
+      if (data.yearlyEnabled !== undefined) {
+        yearlyEnabled.value = Boolean(data.yearlyEnabled);
+      }
+      if (data.yearlyPath !== undefined) {
+        yearlyPath.value = String(data.yearlyPath);
+      }
+      if (data.yearlyTemplatePath !== undefined) {
+        yearlyTemplatePath.value = String(data.yearlyTemplatePath);
       }
     }
     if (position.value === 'top-left') {
@@ -81,49 +131,25 @@ export default class ArcoCalendarPlugin extends Plugin {
           weeklyEnabled: weeklyEnabled.value,
           weeklyPath: weeklyPath.value,
           weeklyTemplatePath: weeklyTemplatePath.value,
+          monthlyEnabled: monthlyEnabled.value,
+          monthlyPath: monthlyPath.value,
+          monthlyTemplatePath: monthlyTemplatePath.value,
+          yearlyEnabled: yearlyEnabled.value,
+          yearlyPath: yearlyPath.value,
+          yearlyTemplatePath: yearlyTemplatePath.value,
         };
         await this.saveData(STORAGE_NAME, saveObj);
         window.location.reload();
       },
     });
-    const selectEle = document.createElement('div');
-    createApp(SySelect).mount(selectEle);
-    this.setting.addItem({
-      title: i18n.value.position?.title || 'Position',
-      actionElement: selectEle,
-    });
 
-    // Week start select (separate setting item, aligned)
-    const weekStartEle = document.createElement('div');
-    createApp(WeekStartSelect).mount(weekStartEle);
+    // Tabbed settings: basic settings + periodic notes settings
+    const settingsTabsEle = document.createElement('div');
+    settingsTabsEle.style.width = '100%';
+    createApp(SettingsTabs).mount(settingsTabsEle);
     this.setting.addItem({
-      title: i18n.value.weekStart?.title || 'Week starts on',
-      actionElement: weekStartEle,
-    });
-
-    // Show week number toggle
-    const showWeekNumEle = document.createElement('div');
-    createApp(ShowWeekNumToggle).mount(showWeekNumEle);
-    this.setting.addItem({
-      title: i18n.value.showWeekNum?.title || 'Show week number',
-      actionElement: showWeekNumEle,
-    });
-
-    // Weekly notes enable toggle (standard titled setting)
-    const weeklyEnabledEle = document.createElement('div');
-    createApp(WeeklySettings).mount(weeklyEnabledEle);
-    this.setting.addItem({
-      title: i18n.value.weekly?.enable || 'Enable weekly notes',
-      actionElement: weeklyEnabledEle,
-    });
-
-    // Integrated Weekly Notes Settings
-    const weeklyGroupEle = document.createElement('div');
-    weeklyGroupEle.style.width = '100%';
-    createApp(WeeklyNoteGroup).mount(weeklyGroupEle);
-    this.setting.addItem({
-      title: '', // No title - let the component use full width
-      actionElement: weeklyGroupEle,
+      title: '',
+      actionElement: settingsTabsEle,
     });
   }
 
@@ -172,11 +198,11 @@ export default class ArcoCalendarPlugin extends Plugin {
     });
   }
 
-    uninstall() {
-        // 卸载插件时删除插件数据
-        // Delete plugin data when uninstalling the plugin
-        this.removeData(STORAGE_NAME).catch(e => {
-            showMessage(`uninstall [${this.name}] remove data [${STORAGE_NAME}] fail: ${e.msg}`);
-        });
-    }
+  uninstall() {
+      // 卸载插件时删除插件数据
+      // Delete plugin data when uninstalling the plugin
+      this.removeData(STORAGE_NAME).catch(e => {
+          showMessage(`uninstall [${this.name}] remove data [${STORAGE_NAME}] fail: ${e.msg}`);
+      });
+  }
 }

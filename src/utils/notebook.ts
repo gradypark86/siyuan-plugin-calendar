@@ -1,7 +1,16 @@
 import dayjs from 'dayjs';
 import * as api from '@/api/api';
 import { setCustomDNAttr } from '@/api/daily-note';
-import { weeklyPath, weeklyTemplatePath } from '@/hooks/useSiYuan';
+import {
+  weeklyPath,
+  weeklyTemplatePath,
+  monthlyEnabled,
+  monthlyPath,
+  monthlyTemplatePath,
+  yearlyEnabled,
+  yearlyPath,
+  yearlyTemplatePath,
+} from '@/hooks/useSiYuan';
 
 export class CusNotebook implements Notebook, NotebookConf {
   constructor(
@@ -65,62 +74,193 @@ export class CusNotebook implements Notebook, NotebookConf {
     // 当前日期无日记，创建日记
     const docID = await api.createDocWithMd(this.id, hPath, '');
     // 根据模板渲染日记
-    if (this.dailyNoteTemplatePath.length) {
-      const res = await api.render(docID, this.dailyNoteTemplatePath);
-      if (res && res.content) {
-        await api.prependBlock('dom', res.content, docID);
-      }
-    }
+    await this.applyTemplate(docID, this.dailyNoteTemplatePath);
     setCustomDNAttr(docID, date); //为新建的日记添加自定义属性
     return { id: docID, dateStr };
   }
 
-  async getWeeklySavePath(date: Date, weekNum: number) {
+  private async renderPathPattern(pathPattern: string, date: Date, variables: Record<string, string | number> = {}) {
     const dateStr = dayjs(date).format('YYYY-MM-DD');
-    let pathPattern = weeklyPath.value || '/Daily Notes/Weekly/{{now "2006-01-02"}}';
-    
-    // Replace {{weekly}} first
-    pathPattern = pathPattern.replace(/\{\{weekly\}\}/g, weekNum.toString());
+    let pattern = pathPattern;
 
-    // Replace now with toDate for the representative date
-    pathPattern = pathPattern.replace(/\{\{(.*?)\}\}/g, match =>
+    for (const [key, value] of Object.entries(variables)) {
+      const reg = new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'g');
+      pattern = pattern.replace(reg, String(value));
+    }
+
+    pattern = pattern.replace(/\{\{(.*?)\}\}/g, match =>
       match.replace(/\bnow\b(?=(?:(?:[^"]*"){2})*[^"]*$)/g, `(toDate "2006-01-02" "${dateStr}")`)
     );
-    return api.renderSprig(pathPattern);
+    return api.renderSprig(pattern);
   }
 
-  async getExistWeeklyNote(date: Date, weekNum: number): Promise<string | undefined> {
-    const hPath = await this.getWeeklySavePath(date, weekNum);
-    const results = await api.sql(`SELECT id FROM blocks WHERE type='d' AND box = '${this.id}' AND hpath = '${hPath}'`);
+  private async getDocIdByHPath(hPath: string): Promise<string | undefined> {
+    const safeHPath = hPath.replace(/'/g, "''");
+    const results = await api.sql(`SELECT id FROM blocks WHERE type='d' AND box = '${this.id}' AND hpath = '${safeHPath}'`);
     if (results && results.length > 0) {
       return results[0].id;
     }
     return undefined;
   }
 
+  private async resolveTemplatePath(templatePath: string): Promise<string> {
+    let tplPath = (templatePath || '').trim();
+    if (!tplPath) return '';
+
+    // Relative path => resolve under workspace/data/templates
+    if (!tplPath.includes(':') && !tplPath.startsWith('\\\\')) {
+      const system = await api.request('/api/system/getConf');
+      const dataDir = system?.conf?.system?.dataDir;
+      if (!dataDir) return '';
+      if (!tplPath.startsWith('/') && !tplPath.startsWith('\\')) {
+        tplPath = '/' + tplPath;
+      }
+      tplPath = dataDir + '/templates' + tplPath;
+    }
+    return tplPath;
+  }
+
+  private async applyTemplate(docID: string, templatePath: string): Promise<void> {
+    const tplPath = await this.resolveTemplatePath(templatePath);
+    if (!tplPath) return;
+
+    const res = await api.render(docID, tplPath);
+    if (res && res.content) {
+      await api.prependBlock('dom', res.content, docID);
+    }
+  }
+
+  /**
+   * If the note already exists and is still empty, apply template once.
+   * This helps when users configure/change template after the periodic note doc was created.
+   */
+  private async applyTemplateIfDocEmpty(docID: string, templatePath: string): Promise<void> {
+    const tplPath = await this.resolveTemplatePath(templatePath);
+    if (!tplPath) return;
+
+    // Robust emptiness check:
+    // only inspect blocks that belong to this document root (root_id = docID),
+    // so child documents won't affect template backfill decision.
+    let hasVisibleContent = false;
+    try {
+      const rows = await api.sql(
+        `SELECT type, content, markdown FROM blocks WHERE root_id = '${docID}' AND type != 'd'`
+      );
+      if (Array.isArray(rows) && rows.length > 0) {
+        hasVisibleContent = rows.some((b: any) => {
+          const raw = typeof b?.markdown === 'string' ? b.markdown : (typeof b?.content === 'string' ? b.content : '');
+          const text = raw.replace(/[\u200B\u200C\u200D\uFEFF]/g, '').trim();
+          return text.length > 0;
+        });
+      }
+    } catch (e) {
+      // Last fallback: exported markdown of current document
+      const exported = await api.exportMdContent(docID);
+      const content = typeof exported?.content === 'string' ? exported.content : '';
+      hasVisibleContent = content.trim().length > 0;
+    }
+
+    if (hasVisibleContent) {
+      return;
+    }
+
+    const res = await api.render(docID, tplPath);
+    if (res && res.content) {
+      await api.prependBlock('dom', res.content, docID);
+    }
+  }
+
+  async getWeeklySavePath(date: Date, weekNum: number) {
+    let pathPattern = weeklyPath.value || '/Daily Notes/Weekly/{{now "2006-01-02"}}';
+    return this.renderPathPattern(pathPattern, date, {
+      weekly: weekNum,
+      month: dayjs(date).format('MM'),
+      monthly: dayjs(date).format('YYYY-MM'),
+      year: dayjs(date).format('YYYY'),
+      yearly: dayjs(date).format('YYYY'),
+    });
+  }
+
+  async getExistWeeklyNote(date: Date, weekNum: number): Promise<string | undefined> {
+    const hPath = await this.getWeeklySavePath(date, weekNum);
+    return this.getDocIdByHPath(hPath);
+  }
+
   async createWeeklyNote(date: Date, weekNum: number): Promise<string> {
     const hPath = await this.getWeeklySavePath(date, weekNum);
     const existingId = await this.getExistWeeklyNote(date, weekNum);
-    if (existingId) return existingId;
+    if (existingId) {
+      await this.applyTemplateIfDocEmpty(existingId, weeklyTemplatePath.value);
+      return existingId;
+    }
 
     const docID = await api.createDocWithMd(this.id, hPath, '');
-    if (weeklyTemplatePath.value) {
-      const system = await api.request('/api/system/getConf');
-      let tplPath = weeklyTemplatePath.value;
-      // Handle relative path to templates directory
-      if (!tplPath.includes(':') && !tplPath.startsWith('\\\\')) {
-        const dataDir = system.conf.system.dataDir;
-        if (!tplPath.startsWith('/') && !tplPath.startsWith('\\')) {
-          tplPath = '/' + tplPath;
-        }
-        tplPath = dataDir + '/templates' + tplPath;
-      }
-      
-      const res = await api.render(docID, tplPath);
-      if (res && res.content) {
-        await api.prependBlock('dom', res.content, docID);
-      }
-    }
+    await this.applyTemplate(docID, weeklyTemplatePath.value);
     return docID;
+  }
+
+  async getMonthlySavePath(date: Date) {
+    const pathPattern = monthlyPath.value || '/Daily Notes/Monthly/{{now | date "2006/01"}}/{{now | date "2006-01"}}';
+    return this.renderPathPattern(pathPattern, date, {
+      month: dayjs(date).format('MM'),
+      monthly: dayjs(date).format('YYYY-MM'),
+      year: dayjs(date).format('YYYY'),
+      yearly: dayjs(date).format('YYYY'),
+    });
+  }
+
+  async getExistMonthlyNote(date: Date): Promise<string | undefined> {
+    const hPath = await this.getMonthlySavePath(date);
+    return this.getDocIdByHPath(hPath);
+  }
+
+  async createMonthlyNote(date: Date): Promise<string> {
+    const hPath = await this.getMonthlySavePath(date);
+    const existingId = await this.getExistMonthlyNote(date);
+    if (existingId) {
+      await this.applyTemplateIfDocEmpty(existingId, monthlyTemplatePath.value);
+      return existingId;
+    }
+
+    const docID = await api.createDocWithMd(this.id, hPath, '');
+    await this.applyTemplate(docID, monthlyTemplatePath.value);
+    return docID;
+  }
+
+  async getYearlySavePath(date: Date) {
+    const pathPattern = yearlyPath.value || '/Daily Notes/Yearly/{{now | date "2006"}}';
+    return this.renderPathPattern(pathPattern, date, {
+      year: dayjs(date).format('YYYY'),
+      yearly: dayjs(date).format('YYYY'),
+    });
+  }
+
+  async getExistYearlyNote(date: Date): Promise<string | undefined> {
+    const hPath = await this.getYearlySavePath(date);
+    return this.getDocIdByHPath(hPath);
+  }
+
+  async createYearlyNote(date: Date): Promise<string> {
+    const hPath = await this.getYearlySavePath(date);
+    const existingId = await this.getExistYearlyNote(date);
+    if (existingId) {
+      await this.applyTemplateIfDocEmpty(existingId, yearlyTemplatePath.value);
+      return existingId;
+    }
+
+    const docID = await api.createDocWithMd(this.id, hPath, '');
+    await this.applyTemplate(docID, yearlyTemplatePath.value);
+    return docID;
+  }
+
+  async ensurePeriodNotes(date: Date): Promise<void> {
+    // Create yearly note first so its path can safely be a parent of monthly path
+    // (e.g. yearly: /daily note/{{now | date "2006"}}, monthly: /daily note/{{now | date "2006/01"}}/...)
+    if (yearlyEnabled.value) {
+      await this.createYearlyNote(date);
+    }
+    if (monthlyEnabled.value) {
+      await this.createMonthlyNote(date);
+    }
   }
 }

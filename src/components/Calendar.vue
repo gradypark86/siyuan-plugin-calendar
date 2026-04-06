@@ -298,6 +298,31 @@ async function refreshExistDates() {
   await getExistDate(thisPanelDate.value);
 }
 
+/**
+ * Ensure monthly/yearly notes exist before creating daily/weekly notes.
+ * Creation is controlled by plugin settings toggles.
+ */
+async function ensurePeriodNotes(date: Date) {
+  if (!notebook.value) return;
+
+  const nb: any = notebook.value as any;
+  try {
+    if (typeof nb.ensurePeriodNotes === 'function') {
+      await nb.ensurePeriodNotes(date);
+      return;
+    }
+
+    if (typeof nb.createMonthlyNote === 'function') {
+      await nb.createMonthlyNote(date);
+    }
+    if (typeof nb.createYearlyNote === 'function') {
+      await nb.createYearlyNote(date);
+    }
+  } catch (e) {
+    console.error('[calendar] ensurePeriodNotes error', e);
+  }
+}
+
 // ===== 方法 =====
 
 function prevMonth() {
@@ -388,6 +413,9 @@ async function openDailyNote(date: Date) {
       return;
     }
 
+    // Ensure monthly/yearly notes exist first (if enabled)
+    await ensurePeriodNotes(d.toDate());
+
     // 创建日报
     try {
       const dailyNote = await notebook.value.createDailyNote(d.toDate());
@@ -432,6 +460,9 @@ async function openWeeklyNote(week: { weekNum: number; days: dayjs.Dayjs[] }) {
     }
 
     if (typeof nb.createWeeklyNote === 'function') {
+      // Ensure monthly/yearly notes exist first (if enabled)
+      await ensurePeriodNotes(repDay.toDate());
+
       const id = await nb.createWeeklyNote(repDay.toDate(), week.weekNum);
       if (id) {
         openDoc(id);

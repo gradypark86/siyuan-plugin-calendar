@@ -34,6 +34,10 @@
 
   ,"showWeekNum": {
     "title": "Mostrar número de semana"
+  },
+  "settingsTabs": {
+    "basic": "Configuración del panel",
+    "periodic": "Configuración de notas periódicas"
   }
   ,"weekly": {
     "enable": "Habilitar notas semanales",
@@ -41,5 +45,19 @@
     "templateLabel": "Ruta de plantilla semanal",
     "pathHint": "Puede usar variables de plantilla de fecha, p. ej. /Daily Notes/{{now | date \"2006/01\"}}/{{now | date \"2006\"}}-W{{weekly}} — {{weekly}} es el número de la semana.",
     "templateHint": "p. ej. weekly-template.md — coloque este archivo en workspace/data/templates/. Dejar vacío para omitir la renderización."
+  },
+  "monthly": {
+    "enable": "Habilitar notas mensuales",
+    "pathLabel": "Ruta de notas mensuales",
+    "templateLabel": "Ruta de plantilla mensual",
+    "pathHint": "Puede usar variables de plantilla de fecha, p. ej. /Daily Notes/{{now | date \"2006/01\"}}.",
+    "templateHint": "p. ej. monthly-template.md — coloque este archivo en workspace/data/templates/. Dejar vacío para omitir la renderización."
+  },
+  "yearly": {
+    "enable": "Habilitar notas anuales",
+    "pathLabel": "Ruta de notas anuales",
+    "templateLabel": "Ruta de plantilla anual",
+    "pathHint": "Puede usar variables de plantilla de fecha, p. ej. /Daily Notes/Yearly/{{now | date \"2006\"}}.",
+    "templateHint": "p. ej. yearly-template.md — coloque este archivo en workspace/data/templates/. Dejar vacío para omitir la renderización."
   }
 }

@@ -1,33 +1,107 @@
 <template>
   <div class="weekly-settings-container">
-    <!-- Path Section (Vertical) -->
-    <div class="vertical-group">
-      <div class="group-label">{{ i18n.weekly?.pathLabel }}</div>
-      <div class="hint">{{ i18n.weekly?.pathHint }}</div>
-      <input 
-        type="text" 
-        class="b3-text-field b3-text-field--full" 
-        v-model="weeklyPath"
-        placeholder="/Daily Notes/{{now | date '2006/01'}}/{{now | date '2006'}}-W{{weekly}}"
-      />
+    <!-- Weekly Section -->
+    <div class="period-section" :class="{ disabled: !weeklyEnabled }">
+      <div class="period-body" :class="{ collapsed: !weeklyEnabled }">
+        <div class="vertical-group">
+          <div class="group-label">{{ i18n.weekly?.pathLabel }}</div>
+          <div class="hint">{{ i18n.weekly?.pathHint }}</div>
+          <input
+            type="text"
+            class="b3-text-field b3-text-field--full"
+            v-model="weeklyPath"
+            :disabled="!weeklyEnabled"
+            placeholder="/Daily Notes/{{now | date '2006/01'}}/{{now | date '2006'}}-W{{weekly}}"
+          />
+        </div>
+
+        <div class="vertical-group">
+          <div class="group-label">{{ i18n.weekly?.templateLabel }}</div>
+          <div class="hint">{{ i18n.weekly?.templateHint }}</div>
+          <input
+            type="text"
+            class="b3-text-field b3-text-field--full"
+            v-model="weeklyTemplatePath"
+            :disabled="!weeklyEnabled"
+            placeholder="weekly-template.md"
+          />
+        </div>
+      </div>
     </div>
 
-    <!-- Template Section (Vertical) -->
-    <div class="vertical-group">
-      <div class="group-label">{{ i18n.weekly?.templateLabel }}</div>
-      <div class="hint">{{ i18n.weekly?.templateHint }}</div>
-      <input 
-        type="text" 
-        class="b3-text-field b3-text-field--full" 
-        v-model="weeklyTemplatePath"
-        placeholder="weekly-template.md"
-      />
+    <!-- Monthly Section -->
+    <div class="period-section" :class="{ disabled: !monthlyEnabled }">
+      <div class="period-body" :class="{ collapsed: !monthlyEnabled }">
+        <div class="vertical-group">
+          <div class="group-label">{{ i18n.monthly?.pathLabel }}</div>
+          <div class="hint">{{ i18n.monthly?.pathHint }}</div>
+          <input
+            type="text"
+            class="b3-text-field b3-text-field--full"
+            v-model="monthlyPath"
+            :disabled="!monthlyEnabled"
+            placeholder="/Daily Notes/Monthly/{{now | date '2006/01'}}/{{now | date '2006-01'}}"
+          />
+        </div>
+
+        <div class="vertical-group">
+          <div class="group-label">{{ i18n.monthly?.templateLabel }}</div>
+          <div class="hint">{{ i18n.monthly?.templateHint }}</div>
+          <input
+            type="text"
+            class="b3-text-field b3-text-field--full"
+            v-model="monthlyTemplatePath"
+            :disabled="!monthlyEnabled"
+            placeholder="monthly-template.md"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Yearly Section -->
+    <div class="period-section" :class="{ disabled: !yearlyEnabled }">
+      <div class="period-body" :class="{ collapsed: !yearlyEnabled }">
+        <div class="vertical-group">
+          <div class="group-label">{{ i18n.yearly?.pathLabel }}</div>
+          <div class="hint">{{ i18n.yearly?.pathHint }}</div>
+          <input
+            type="text"
+            class="b3-text-field b3-text-field--full"
+            v-model="yearlyPath"
+            :disabled="!yearlyEnabled"
+            placeholder="/Daily Notes/Yearly/{{now | date '2006'}}"
+          />
+        </div>
+
+        <div class="vertical-group">
+          <div class="group-label">{{ i18n.yearly?.templateLabel }}</div>
+          <div class="hint">{{ i18n.yearly?.templateHint }}</div>
+          <input
+            type="text"
+            class="b3-text-field b3-text-field--full"
+            v-model="yearlyTemplatePath"
+            :disabled="!yearlyEnabled"
+            placeholder="yearly-template.md"
+          />
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { weeklyPath, weeklyTemplatePath, i18n } from '@/hooks/useSiYuan';
+import {
+  weeklyEnabled,
+  weeklyPath,
+  weeklyTemplatePath,
+  monthlyEnabled,
+  monthlyPath,
+  monthlyTemplatePath,
+  yearlyEnabled,
+  yearlyPath,
+  yearlyTemplatePath,
+  i18n,
+} from '@/hooks/useSiYuan';
 </script>
 
 <style scoped>
@@ -36,8 +110,31 @@ import { weeklyPath, weeklyTemplatePath, i18n } from '@/hooks/useSiYuan';
   flex-direction: column;
   width: 100%;
   box-sizing: border-box;
-  /* Shift left to align with title labels above */
-  margin-left: -10px;
+  margin-left: 0;
+  padding-left: 2px;
+}
+
+.period-section {
+  width: 100%;
+  border-radius: 6px;
+  transition: opacity 0.2s ease;
+}
+
+.period-section.disabled {
+  opacity: 0.58;
+}
+
+.period-body {
+  overflow: hidden;
+  max-height: 520px;
+  transition: max-height 0.22s ease, opacity 0.2s ease, filter 0.2s ease;
+}
+
+.period-body.collapsed {
+  max-height: 0;
+  opacity: 0.45;
+  filter: grayscale(0.2);
+  pointer-events: none;
 }
 
 /* Row that mimics a standard b3-label structure */
