@@ -54,12 +54,16 @@
         <tr v-for="week in monthWeeks" :key="`week-${week.weekNum}`" class="week-row">
           <!-- 周号列 -->
           <td v-if="showWeekNum" class="week-cell">
-            <template v-if="weeklyEnabled">
-              <button class="week-num-btn" @click.stop="openWeeklyNote(week)">{{ week.weekNum }}</button>
-            </template>
-            <template v-else>
-              <div class="week-num">{{ week.weekNum }}</div>
-            </template>
+            <div class="week-content">
+              <template v-if="weeklyEnabled">
+                <button class="week-num-btn" @click.stop="openWeeklyNote(week)">{{ week.weekNum }}</button>
+              </template>
+              <template v-else>
+                <div class="week-num">{{ week.weekNum }}</div>
+              </template>
+              <div class="week-marker" v-if="existWeeklyNotesMap.has(getWeekKey(week))">•</div>
+              <div class="week-marker week-marker-empty" v-else></div>
+            </div>
           </td>
 
           <!-- 日期单元格 -->
@@ -189,10 +193,48 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocumentClick));
 
 // 已存在日记的日期
 const existDailyNotesMap = ref(new Map());
+// 已存在周记映射（key: weekKey -> docId）
+const existWeeklyNotesMap = ref(new Map<string, string>());
+let weeklyFetchToken = 0;
 // 防止重复点击导致二次打开/创建
 const processingDates = new Set<string>();
 // 选中的日期
 const selectedDate = ref<string | null>(null);
+
+function getWeekKey(week: { weekNum: number; days: dayjs.Dayjs[] }): string {
+  const startDate = week.days[0];
+  return `${startDate.format('YYYY-MM-DD')}#${week.weekNum}`;
+}
+
+async function loadExistWeeklyNotes() {
+  const token = ++weeklyFetchToken;
+  existWeeklyNotesMap.value.clear();
+
+  if (!notebook.value) return;
+  const nb: any = notebook.value as any;
+  if (typeof nb.getExistWeeklyNote !== 'function') return;
+
+  const results = await Promise.all(
+    monthWeeks.value.map(async week => {
+      const repDay = week.days[Math.floor(week.days.length / 2)];
+      try {
+        const id = await nb.getExistWeeklyNote(repDay.toDate(), week.weekNum);
+        if (!id) return null;
+        return [getWeekKey(week), id] as const;
+      } catch (e) {
+        return null;
+      }
+    })
+  );
+
+  // 防止旧请求覆盖新状态
+  if (token !== weeklyFetchToken) return;
+  for (const row of results) {
+    if (row) {
+      existWeeklyNotesMap.value.set(row[0], row[1]);
+    }
+  }
+}
 
 // ===== 计算属性 =====
 
@@ -296,6 +338,7 @@ async function refreshExistDates() {
   }
 
   await getExistDate(thisPanelDate.value);
+  await loadExistWeeklyNotes();
 }
 
 /**
@@ -454,6 +497,7 @@ async function openWeeklyNote(week: { weekNum: number; days: dayjs.Dayjs[] }) {
     if (typeof nb.getExistWeeklyNote === 'function') {
       const id = await nb.getExistWeeklyNote(repDay.toDate(), week.weekNum);
       if (id) {
+        existWeeklyNotesMap.value.set(getWeekKey(week), id);
         openDoc(id);
         return;
       }
@@ -465,6 +509,7 @@ async function openWeeklyNote(week: { weekNum: number; days: dayjs.Dayjs[] }) {
 
       const id = await nb.createWeeklyNote(repDay.toDate(), week.weekNum);
       if (id) {
+        existWeeklyNotesMap.value.set(getWeekKey(week), id);
         openDoc(id);
         try {
           await api.pushMsg(formatMsg('createdWeeklyNote'), 2000);
@@ -489,6 +534,7 @@ async function openWeeklyNote(week: { weekNum: number; days: dayjs.Dayjs[] }) {
 async function changeMonth(date: Date) {
   thisPanelDate.value = date;
   await getExistDate(date);
+  await loadExistWeeklyNotes();
 }
 
 /**
@@ -513,9 +559,15 @@ async function getExistDate(date: Date) {
 
 watch(notebook, notebook => {
   existDailyNotesMap.value.clear();
+  existWeeklyNotesMap.value.clear();
   if (notebook) {
     getExistDate(thisPanelDate.value);
+    loadExistWeeklyNotes();
   }
+});
+
+watch(() => weekStart.value, () => {
+  loadExistWeeklyNotes();
 });
 
 watch(displayedMonth, (newMonth) => {
@@ -528,14 +580,16 @@ eventBus.value?.on('ws-main', async ({ detail }) => {
     return;
   }
   const { cmd } = detail;
-  if (['removeDoc', 'createdailynote'].includes(cmd)) {
+  if (['removeDoc', 'createdailynote', 'createDoc'].includes(cmd)) {
     await refreshSql();
     await getExistDate(thisPanelDate.value);
+    await loadExistWeeklyNotes();
   }
 });
 
 // 初始化
 getExistDate(new Date());
+loadExistWeeklyNotes();
 </script>
 
 <style scoped lang="less">
@@ -712,6 +766,12 @@ getExistDate(new Date());
 
 }
 
+.week-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
 /* 周号悬停效果：字体加粗 */
 .week-cell:hover .week-num,
 .week-cell:hover .week-num-btn {
@@ -749,27 +809,59 @@ getExistDate(new Date());
 }
 
 .week-num {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  height: 100%;
   color: var(--b3-theme-primary);
   font-weight: 600;
+  min-width: 22px;
+  height: 22px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .week-num-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  height: 100%;
+  min-width: 22px;
+  height: 22px;
   background: transparent;
   border: none;
   color: var(--b3-theme-primary);
   font-weight: 600;
   cursor: pointer;
   padding: 0;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.week-marker {
+  font-size: 14px;
+  color: var(--b3-theme-accent);
+  line-height: 1;
+  height: 14px;
+  width: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0px;
+}
+
+.week-marker-empty {
+  visibility: hidden;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0px;
 }
 
 /* 竖直分割线（可见性更好，非表格边框） */

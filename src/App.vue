@@ -1,27 +1,32 @@
 <template>
-  <a-config-provider :locale="configLocale">
-    <a-tabs style="width: 100%">
-      <template #extra>
-        <div style="display:flex; gap:8px; align-items:center;">
-          <a-select
-            v-model="selectNotebookId"
-            :options="cusNotebooks"
-            :field-names="{ value: 'id', label: 'name' }"
-            :style="{ width: '160px', marginRight: '5px' }"
-            :placeholder="i18n.placeholder"
-            allow-search
-          >
-          </a-select>
-        </div>
-      </template>
-      <a-tab-pane key="1">
-        <template #title> {{ i18n.tabName }} </template>
-        <CalendarView :notebook="selectNotebook" />
-      </a-tab-pane>
-      <!-- <a-tab-pane key="2">
-        </a-tab-pane> -->
-    </a-tabs>
-  </a-config-provider>
+  <div ref="panelRootRef" class="calendar-panel-root" @mousedown.stop @click.stop @wheel.stop>
+    <a-config-provider :locale="configLocale">
+      <a-tabs style="width: 100%">
+        <template #extra>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <a-select
+              v-model="selectNotebookId"
+              :options="cusNotebooks"
+              :field-names="{ value: 'id', label: 'name' }"
+              :style="{ width: '160px', marginRight: '5px' }"
+              :placeholder="i18n.placeholder"
+              allow-search
+              @popup-visible-change="handleNotebookDropdownVisibleChange"
+              @mousedown.stop
+              @click.stop
+            >
+            </a-select>
+          </div>
+        </template>
+        <a-tab-pane key="1">
+          <template #title> {{ i18n.tabName }} </template>
+          <CalendarView :notebook="selectNotebook" />
+        </a-tab-pane>
+        <!-- <a-tab-pane key="2">
+          </a-tab-pane> -->
+      </a-tabs>
+    </a-config-provider>
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -74,6 +79,53 @@ updateDayjsLocale();
 const cusNotebooks = ref<CusNotebook[]>([]);
 const selectNotebookId = ref<NotebookId | undefined>(undefined);
 const selectNotebook = computed(() => cusNotebooks.value.find(book => book.id === selectNotebookId.value));
+const panelRootRef = ref<HTMLElement | null>(null);
+const dropdownWheelCleanupFns: Array<() => void> = [];
+
+function bindNotebookDropdownWheelFix() {
+  const dropdowns = document.querySelectorAll('.arco-select-dropdown');
+  if (!dropdowns.length) return;
+
+  const dropdown = dropdowns[dropdowns.length - 1] as HTMLElement;
+  if ((dropdown as any).__wheelFixed) return;
+
+  const stopBubbleHandler = (e: Event) => {
+    e.stopPropagation();
+  };
+
+  const wheelHandler = (e: WheelEvent) => {
+    const target = e.target as HTMLElement | null;
+    const scrollContainer =
+      (target?.closest('.arco-virtual-list-holder') as HTMLElement | null) ||
+      (target?.closest('.arco-scrollbar-container') as HTMLElement | null) ||
+      (dropdown.querySelector('.arco-virtual-list-holder') as HTMLElement | null) ||
+      (dropdown.querySelector('.arco-scrollbar-container') as HTMLElement | null) ||
+      dropdown;
+
+    const prevTop = scrollContainer.scrollTop;
+    scrollContainer.scrollTop += e.deltaY;
+    if (scrollContainer.scrollTop !== prevTop) {
+      e.preventDefault();
+    }
+    e.stopPropagation();
+  };
+
+  dropdown.addEventListener('mousedown', stopBubbleHandler);
+  dropdown.addEventListener('click', stopBubbleHandler);
+  dropdown.addEventListener('wheel', wheelHandler, { passive: false });
+  (dropdown as any).__wheelFixed = true;
+  dropdownWheelCleanupFns.push(() => {
+    dropdown.removeEventListener('mousedown', stopBubbleHandler);
+    dropdown.removeEventListener('click', stopBubbleHandler);
+    dropdown.removeEventListener('wheel', wheelHandler);
+    delete (dropdown as any).__wheelFixed;
+  });
+}
+
+function handleNotebookDropdownVisibleChange(visible: boolean) {
+  if (!visible) return;
+  nextTick(() => bindNotebookDropdownWheelFix());
+}
 
 async function init() {
   const { notebooks } = await lsNotebooks();
@@ -116,4 +168,17 @@ watch(selectNotebookId, async bookId => {
 });
 
 // weekStart is managed by plugin settings; no local storage writes here.
+
+onBeforeUnmount(() => {
+  for (const cleanup of dropdownWheelCleanupFns) {
+    cleanup();
+  }
+  dropdownWheelCleanupFns.length = 0;
+});
 </script>
+
+<style scoped>
+.calendar-panel-root {
+  width: 100%;
+}
+</style>
