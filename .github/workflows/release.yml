@@ -58,15 +58,18 @@ jobs:
         id: get_tags
         shell: bash
         run: |
-          # ensure tags are fetched
-          git fetch --prune --unshallow --tags 2>/dev/null || git fetch --prune --tags
-          CURRENT_TAG=${GITHUB_REF#refs/tags/}
-          # get the previous tag by creation date (the tag before current)
-          PREV_TAG=$(git tag --sort=-creatordate | sed -n '2p' || true)
-          echo "CURRENT_TAG=$CURRENT_TAG" >> $GITHUB_ENV
-          echo "PREV_TAG=$PREV_TAG" >> $GITHUB_ENV
+          # best-effort fetch tags; do not fail workflow on transient fetch issues
+          git fetch --force --tags origin >/dev/null 2>&1 || true
+
+          CURRENT_TAG="${GITHUB_REF_NAME:-${GITHUB_REF#refs/tags/}}"
+
+          # get previous tag by creation date, explicitly excluding current tag
+          PREV_TAG="$(git for-each-ref --sort=-creatordate --format='%(refname:short)' refs/tags | grep -Fxv "$CURRENT_TAG" | head -n 1 || true)"
+
+          echo "CURRENT_TAG=$CURRENT_TAG" >> "$GITHUB_ENV"
+          echo "PREV_TAG=$PREV_TAG" >> "$GITHUB_ENV"
           echo "current_tag=$CURRENT_TAG"
-          echo "prev_tag=$PREV_TAG"
+          echo "prev_tag=${PREV_TAG:-<none>}"
 
       - name: Generate changelog
         id: changelog
