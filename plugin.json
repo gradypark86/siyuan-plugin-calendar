@@ -12,8 +12,8 @@
     "default": "Siyuan Calendar Panel"
   },
   "description": {
-    "zh_CN": "在日历面板上快速新建或转到日记与周记",
-    "default": "Quickly create a new or go to diary or weekly notes on the calendar panel"
+    "zh_CN": "在日历面板上快速新建或转到日记与周记，支持周期笔记模板",
+    "default": "Quickly create a new or go to diary or weekly notes on the calendar panel, with support for periodic note templates"
   },
   "readme": {
     "zh_CN": "README.md",
