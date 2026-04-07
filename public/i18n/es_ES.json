@@ -17,7 +17,8 @@
     "createDailyNoteFailed": "Error al crear la nota diaria"
     ,
     "createdWeeklyNote": "Nota semanal creada",
-    "createWeeklyNoteFailed": "Error al crear la nota semanal"
+    "createWeeklyNoteFailed": "Error al crear la nota semanal",
+    "periodicPathAutoDisabled": "Se detectaron rutas de almacenamiento vacías y se desactivaron automáticamente los interruptores relacionados: {items}"
   },
   "position": {
     "title": "Posición de entrada del botón",
@@ -44,20 +45,23 @@
     "pathLabel": "Ruta de notas semanales",
     "templateLabel": "Ruta de plantilla semanal",
     "pathHint": "Puede usar variables de plantilla de fecha, p. ej. /Daily Notes/{{now | date \"2006/01\"}}/{{now | date \"2006\"}}-W{{weekly}} — {{weekly}} es el número de la semana.",
-    "templateHint": "p. ej. weekly-template.md — coloque este archivo en workspace/data/templates/. Dejar vacío para omitir la renderización."
+    "templateHint": "p. ej. weekly-template.md — coloque este archivo en workspace/data/templates/. Dejar vacío para omitir la renderización.",
+    "pathRequired": "La ruta de notas semanales es obligatoria."
   },
   "monthly": {
     "enable": "Habilitar notas mensuales",
     "pathLabel": "Ruta de notas mensuales",
     "templateLabel": "Ruta de plantilla mensual",
     "pathHint": "Puede usar variables de plantilla de fecha, p. ej. /Daily Notes/{{now | date \"2006/01\"}}.",
-    "templateHint": "p. ej. monthly-template.md — coloque este archivo en workspace/data/templates/. Dejar vacío para omitir la renderización."
+    "templateHint": "p. ej. monthly-template.md — coloque este archivo en workspace/data/templates/. Dejar vacío para omitir la renderización.",
+    "pathRequired": "La ruta de notas mensuales es obligatoria."
   },
   "yearly": {
     "enable": "Habilitar notas anuales",
     "pathLabel": "Ruta de notas anuales",
     "templateLabel": "Ruta de plantilla anual",
     "pathHint": "Puede usar variables de plantilla de fecha, p. ej. /Daily Notes/Yearly/{{now | date \"2006\"}}.",
-    "templateHint": "p. ej. yearly-template.md — coloque este archivo en workspace/data/templates/. Dejar vacío para omitir la renderización."
+    "templateHint": "p. ej. yearly-template.md — coloque este archivo en workspace/data/templates/. Dejar vacío para omitir la renderización.",
+    "pathRequired": "La ruta de notas anuales es obligatoria."
   }
 }

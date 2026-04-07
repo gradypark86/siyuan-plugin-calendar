@@ -9,10 +9,12 @@
           <input
             type="text"
             class="b3-text-field b3-text-field--full"
+            :class="{ 'path-required': weeklyPathInvalid }"
             v-model="weeklyPath"
             :disabled="!weeklyEnabled"
             placeholder="/Daily Notes/{{now | date '2006/01'}}/{{now | date '2006'}}-W{{weekly}}"
           />
+          <div class="required-tip" v-if="weeklyPathInvalid">{{ i18n.weekly?.pathRequired || 'Weekly notes path is required.' }}</div>
         </div>
 
         <div class="vertical-group">
@@ -38,10 +40,12 @@
           <input
             type="text"
             class="b3-text-field b3-text-field--full"
+            :class="{ 'path-required': monthlyPathInvalid }"
             v-model="monthlyPath"
             :disabled="!monthlyEnabled"
             placeholder="/Daily Notes/Monthly/{{now | date '2006/01'}}/{{now | date '2006-01'}}"
           />
+          <div class="required-tip" v-if="monthlyPathInvalid">{{ i18n.monthly?.pathRequired || 'Monthly notes path is required.' }}</div>
         </div>
 
         <div class="vertical-group">
@@ -67,10 +71,12 @@
           <input
             type="text"
             class="b3-text-field b3-text-field--full"
+            :class="{ 'path-required': yearlyPathInvalid }"
             v-model="yearlyPath"
             :disabled="!yearlyEnabled"
             placeholder="/Daily Notes/Yearly/{{now | date '2006'}}"
           />
+          <div class="required-tip" v-if="yearlyPathInvalid">{{ i18n.yearly?.pathRequired || 'Yearly notes path is required.' }}</div>
         </div>
 
         <div class="vertical-group">
@@ -90,6 +96,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import {
   weeklyEnabled,
   weeklyPath,
@@ -102,6 +109,10 @@ import {
   yearlyTemplatePath,
   i18n,
 } from '@/hooks/useSiYuan';
+
+const weeklyPathInvalid = computed(() => weeklyEnabled.value && !String(weeklyPath.value || '').trim());
+const monthlyPathInvalid = computed(() => monthlyEnabled.value && !String(monthlyPath.value || '').trim());
+const yearlyPathInvalid = computed(() => yearlyEnabled.value && !String(yearlyPath.value || '').trim());
 </script>
 
 <style scoped>
@@ -211,6 +222,17 @@ import {
 
 .b3-text-field:hover {
   border-color: var(--b3-theme-primary-light);
+}
+
+.b3-text-field.path-required {
+  border-color: var(--b3-theme-error, #d03050) !important;
+}
+
+.required-tip {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--b3-theme-error, #d03050);
+  line-height: 1.4;
 }
 
 .b3-text-field::placeholder {

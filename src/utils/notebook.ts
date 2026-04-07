@@ -171,7 +171,10 @@ export class CusNotebook implements Notebook, NotebookConf {
   }
 
   async getWeeklySavePath(date: Date, weekNum: number) {
-    let pathPattern = weeklyPath.value || '/Daily Notes/Weekly/{{now "2006-01-02"}}';
+    const pathPattern = String(weeklyPath.value || '').trim();
+    if (!pathPattern) {
+      throw new Error('weeklyPath is required when weekly notes are enabled');
+    }
     return this.renderPathPattern(pathPattern, date, {
       weekly: weekNum,
       month: dayjs(date).format('MM'),
@@ -200,7 +203,10 @@ export class CusNotebook implements Notebook, NotebookConf {
   }
 
   async getMonthlySavePath(date: Date) {
-    const pathPattern = monthlyPath.value || '/Daily Notes/Monthly/{{now | date "2006/01"}}/{{now | date "2006-01"}}';
+    const pathPattern = String(monthlyPath.value || '').trim();
+    if (!pathPattern) {
+      throw new Error('monthlyPath is required when monthly notes are enabled');
+    }
     return this.renderPathPattern(pathPattern, date, {
       month: dayjs(date).format('MM'),
       monthly: dayjs(date).format('YYYY-MM'),
@@ -228,7 +234,10 @@ export class CusNotebook implements Notebook, NotebookConf {
   }
 
   async getYearlySavePath(date: Date) {
-    const pathPattern = yearlyPath.value || '/Daily Notes/Yearly/{{now | date "2006"}}';
+    const pathPattern = String(yearlyPath.value || '').trim();
+    if (!pathPattern) {
+      throw new Error('yearlyPath is required when yearly notes are enabled');
+    }
     return this.renderPathPattern(pathPattern, date, {
       year: dayjs(date).format('YYYY'),
       yearly: dayjs(date).format('YYYY'),

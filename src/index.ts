@@ -108,6 +108,18 @@ export default class ArcoCalendarPlugin extends Plugin {
       if (data.yearlyTemplatePath !== undefined) {
         yearlyTemplatePath.value = String(data.yearlyTemplatePath);
       }
+
+      // Path-required guard for periodic notes:
+      // if enabled but path is empty, force switch off to keep state valid.
+      if (weeklyEnabled.value && !String(weeklyPath.value || '').trim()) {
+        weeklyEnabled.value = false;
+      }
+      if (monthlyEnabled.value && !String(monthlyPath.value || '').trim()) {
+        monthlyEnabled.value = false;
+      }
+      if (yearlyEnabled.value && !String(yearlyPath.value || '').trim()) {
+        yearlyEnabled.value = false;
+      }
     }
     if (position.value === 'top-left') {
       this.addTopItem('left');
@@ -124,18 +136,52 @@ export default class ArcoCalendarPlugin extends Plugin {
       height: 'auto',
       width: '500px',
       confirmCallback: async () => {
+        const weeklyPathValue = String(weeklyPath.value || '').trim();
+        const monthlyPathValue = String(monthlyPath.value || '').trim();
+        const yearlyPathValue = String(yearlyPath.value || '').trim();
+
+        let weeklyEnabledValue = Boolean(weeklyEnabled.value);
+        let monthlyEnabledValue = Boolean(monthlyEnabled.value);
+        let yearlyEnabledValue = Boolean(yearlyEnabled.value);
+        const autoDisabled: string[] = [];
+        const weeklyPathLabel = i18n.value.weekly?.pathLabel || 'Weekly notes path';
+        const monthlyPathLabel = i18n.value.monthly?.pathLabel || 'Monthly notes path';
+        const yearlyPathLabel = i18n.value.yearly?.pathLabel || 'Yearly notes path';
+
+        if (weeklyEnabledValue && !weeklyPathValue) {
+          weeklyEnabledValue = false;
+          weeklyEnabled.value = false;
+          autoDisabled.push(weeklyPathLabel);
+        }
+        if (monthlyEnabledValue && !monthlyPathValue) {
+          monthlyEnabledValue = false;
+          monthlyEnabled.value = false;
+          autoDisabled.push(monthlyPathLabel);
+        }
+        if (yearlyEnabledValue && !yearlyPathValue) {
+          yearlyEnabledValue = false;
+          yearlyEnabled.value = false;
+          autoDisabled.push(yearlyPathLabel);
+        }
+
+        if (autoDisabled.length > 0) {
+          const msgTpl = i18n.value.msg?.periodicPathAutoDisabled
+            || 'Detected empty storage paths and automatically disabled related toggles: {items}';
+          showMessage(msgTpl.replace('{items}', autoDisabled.join('、')));
+        }
+
         const saveObj: any = {
           position: position.value,
           weekStart: Number(weekStart.value),
           showWeekNum: showWeekNum.value,
-          weeklyEnabled: weeklyEnabled.value,
-          weeklyPath: weeklyPath.value,
+          weeklyEnabled: weeklyEnabledValue,
+          weeklyPath: weeklyPathValue,
           weeklyTemplatePath: weeklyTemplatePath.value,
-          monthlyEnabled: monthlyEnabled.value,
-          monthlyPath: monthlyPath.value,
+          monthlyEnabled: monthlyEnabledValue,
+          monthlyPath: monthlyPathValue,
           monthlyTemplatePath: monthlyTemplatePath.value,
-          yearlyEnabled: yearlyEnabled.value,
-          yearlyPath: yearlyPath.value,
+          yearlyEnabled: yearlyEnabledValue,
+          yearlyPath: yearlyPathValue,
           yearlyTemplatePath: yearlyTemplatePath.value,
         };
         await this.saveData(STORAGE_NAME, saveObj);

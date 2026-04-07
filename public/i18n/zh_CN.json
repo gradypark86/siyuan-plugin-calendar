@@ -17,7 +17,8 @@
     "createDailyNoteFailed": "创建日记失败"
     ,
     "createdWeeklyNote": "已创建周记",
-    "createWeeklyNoteFailed": "创建周记失败"
+    "createWeeklyNoteFailed": "创建周记失败",
+    "periodicPathAutoDisabled": "检测到以下存放路径为空，已自动关闭对应开关：{items}"
   },
   "position": {
     "title": "按钮入口位置",
@@ -44,20 +45,23 @@
     "pathLabel": "周记存放路径",
     "templateLabel": "周记模板路径",
     "pathHint": "可使用日期格式模板变量，例如 /Daily Notes/{{now | date \"2006/01\"}}/{{now | date \"2006\"}}-W{{weekly}}，{{weekly}} 为周号。",
-    "templateHint": "例如 weekly-template.md，需要将该文件放置于工作空间/data/templates/ 下。留空则不渲染模板。"
+    "templateHint": "例如 weekly-template.md，需要将该文件放置于工作空间/data/templates/ 下。留空则不渲染模板。",
+    "pathRequired": "周记存放路径不能为空"
   },
   "monthly": {
     "enable": "月记开关",
     "pathLabel": "月记存放路径",
     "templateLabel": "月记模板路径",
     "pathHint": "可使用日期格式模板变量，例如 /Daily Notes/{{now | date \"2006/01\"}}。",
-    "templateHint": "例如 monthly-template.md，需要将该文件放置于工作空间/data/templates/ 下。留空则不渲染模板。"
+    "templateHint": "例如 monthly-template.md，需要将该文件放置于工作空间/data/templates/ 下。留空则不渲染模板。",
+    "pathRequired": "月记存放路径不能为空"
   },
   "yearly": {
     "enable": "年记开关",
     "pathLabel": "年记存放路径",
     "templateLabel": "年记模板路径",
     "pathHint": "可使用日期格式模板变量，例如 /Daily Notes/{{now | date \"2006\"}}。",
-    "templateHint": "例如 yearly-template.md，需要将该文件放置于工作空间/data/templates/ 下。留空则不渲染模板。"
+    "templateHint": "例如 yearly-template.md，需要将该文件放置于工作空间/data/templates/ 下。留空则不渲染模板。",
+    "pathRequired": "年记存放路径不能为空"
   }
 }

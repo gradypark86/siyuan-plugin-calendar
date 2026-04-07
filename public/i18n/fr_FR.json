@@ -17,7 +17,8 @@
     "createDailyNoteFailed": "Échec de la création du journal"
     ,
     "createdWeeklyNote": "Note hebdomadaire créée",
-    "createWeeklyNoteFailed": "Échec de la création de la note hebdomadaire"
+    "createWeeklyNoteFailed": "Échec de la création de la note hebdomadaire",
+    "periodicPathAutoDisabled": "Des chemins de stockage vides ont été détectés et les interrupteurs correspondants ont été désactivés automatiquement : {items}"
   },
   "position": {
     "title": "Position d'entrée du bouton",
@@ -44,20 +45,23 @@
     "pathLabel": "Chemin des notes hebdomadaires",
     "templateLabel": "Chemin du modèle hebdomadaire",
     "pathHint": "Vous pouvez utiliser des variables de modèle de date, p.ex. /Daily Notes/{{now | date \"2006/01\"}}/{{now | date \"2006\"}}-W{{weekly}} — {{weekly}} est le numéro de la semaine.",
-    "templateHint": "p.ex. weekly-template.md — placez ce fichier dans workspace/data/templates/. Laisser vide pour ne pas rendre le modèle."
+    "templateHint": "p.ex. weekly-template.md — placez ce fichier dans workspace/data/templates/. Laisser vide pour ne pas rendre le modèle.",
+    "pathRequired": "Le chemin des notes hebdomadaires est requis."
   },
   "monthly": {
     "enable": "Activer les notes mensuelles",
     "pathLabel": "Chemin des notes mensuelles",
     "templateLabel": "Chemin du modèle mensuel",
     "pathHint": "Vous pouvez utiliser des variables de modèle de date, p.ex. /Daily Notes/{{now | date \"2006/01\"}}.",
-    "templateHint": "p.ex. monthly-template.md — placez ce fichier dans workspace/data/templates/. Laisser vide pour ne pas rendre le modèle."
+    "templateHint": "p.ex. monthly-template.md — placez ce fichier dans workspace/data/templates/. Laisser vide pour ne pas rendre le modèle.",
+    "pathRequired": "Le chemin des notes mensuelles est requis."
   },
   "yearly": {
     "enable": "Activer les notes annuelles",
     "pathLabel": "Chemin des notes annuelles",
     "templateLabel": "Chemin du modèle annuel",
     "pathHint": "Vous pouvez utiliser des variables de modèle de date, p.ex. /Daily Notes/Yearly/{{now | date \"2006\"}}.",
-    "templateHint": "p.ex. yearly-template.md — placez ce fichier dans workspace/data/templates/. Laisser vide pour ne pas rendre le modèle."
+    "templateHint": "p.ex. yearly-template.md — placez ce fichier dans workspace/data/templates/. Laisser vide pour ne pas rendre le modèle.",
+    "pathRequired": "Le chemin des notes annuelles est requis."
   }
 }
