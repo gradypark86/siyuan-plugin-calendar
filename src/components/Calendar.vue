@@ -40,7 +40,7 @@
     <table class="calendar-table">
       <thead>
         <tr>
-          <th v-if="showWeekNum" class="week-header">{{ localeType === 'zh_CN' ? '周' : 'W' }}</th>
+          <th v-if="showWeekNum" class="week-header">{{ isChineseLocale ? '周' : 'W' }}</th>
           <th v-for="(dayName, index) in dayNames"
               :key="dayName"
               :class="{ 'weekend-header': isWeekendColumn(index) }">
@@ -126,6 +126,11 @@ const months = computed(() => {
   const arr: string[] = [];
   for (let i = 1; i <= 12; i++) arr.push(i.toString().padStart(2, '0'));
   return arr;
+});
+
+const isChineseLocale = computed(() => {
+  const lang = String(localeType.value || '').replace('-', '_').toLowerCase();
+  return lang.startsWith('zh');
 });
 
 // 年份网格（3x3 中间为当前年，首尾为翻页按钮）
@@ -302,7 +307,7 @@ const dayNames = computed(() => {
   const result: string[] = [];
   for (let i = 0; i < 7; i++) {
     const index = (startDay + i) % 7;
-    if (localeType && localeType.value === 'zh_CN') {
+    if (isChineseLocale.value) {
       result.push(chineseDays[index]);
     } else {
       result.push(dayNameArray[index].toUpperCase());
@@ -313,13 +318,13 @@ const dayNames = computed(() => {
 });
 
 const todayLabel = computed(() => {
-  if (localeType && localeType.value === 'zh_CN') return '今';
+  if (isChineseLocale.value) return '今';
   if (localeType && typeof localeType.value === 'string' && localeType.value.startsWith('en')) return 'TODAY';
   return (locale && locale.value && locale.value.datePicker && locale.value.datePicker.today) || 'Today';
 });
 
 const refreshTitle = computed(() => {
-  if (localeType && localeType.value === 'zh_CN') return '刷新';
+  if (isChineseLocale.value) return '刷新';
   return 'Refresh';
 });
 
