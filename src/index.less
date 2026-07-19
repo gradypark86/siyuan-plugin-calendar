@@ -135,6 +135,36 @@
   }
 }
 
+/* Settings dialog: edge-to-edge panel (no b3-dialog__content padding frame) */
+.b3-dialog__container.calendar-setting-dialog {
+  overflow: hidden !important;
+
+  > .b3-dialog__body {
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: var(--b3-theme-surface) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .calendar-setting-dialog__panel {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    overflow: hidden !important;
+    background: var(--b3-theme-surface) !important;
+  }
+
+  > .b3-dialog__body > .b3-dialog__action {
+    flex-shrink: 0 !important;
+  }
+}
+
 .arco-select-dropdown {
   padding: 6px !important;
 }

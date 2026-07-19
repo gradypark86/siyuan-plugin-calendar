@@ -1,0 +1,70 @@
+{
+  "openCalendar": "カレンダーを開く",
+  "tabName": "カレンダー",
+  "placeholder": "ノートブックを選択...",
+  "msg": {
+    "begin": "[カレンダープラグイン]",
+    "notNoteBook": "現在のノートブックを取得できませんでした。手動で設定してください",
+    "refreshing": "更新中です。しばらくお待ちください",
+    "weeklyPathNotSet": "エラー: 週次ノートの保存パスが設定されていません。",
+    "confirmCreateDailyNote": "日記が存在しません。作成しますか？",
+    "failedToCreateWeeklyNote": "週次ノートの作成/開くに失敗しました",
+    "confirm": "確認",
+    "cancel": "キャンセル",
+    "pleaseConfirm": "確認してください",
+    "createdDailyNote": "日記を作成しました",
+    "createDailyNoteFailed": "日記の作成に失敗しました",
+    "createdWeeklyNote": "週次ノートを作成しました",
+    "createWeeklyNoteFailed": "週次ノートの作成に失敗しました",
+    "periodicPathAutoDisabled": "保存パスが空のため、関連するスイッチを自動でオフにしました: {items}"
+  },
+  "position": {
+    "title": "ボタンの表示位置",
+    "topLeft": "上部左",
+    "topRight": "上部右",
+    "dock": "ドック"
+  },
+  "weekStart": {
+    "title": "週の開始曜日",
+    "sunday": "日曜日",
+    "monday": "月曜日"
+  },
+  "showWeekNum": {
+    "title": "週番号を表示"
+  },
+  "settingsTabs": {
+    "basic": "パネル設定",
+    "periodic": "周期ノート設定",
+    "advanced": "詳細設定"
+  },
+  "dayRolloverHour": {
+    "title": "新しい一日の開始時刻",
+    "hint": "この時刻より前は、「今日」は前日として扱われます。例: 02:30 に設定すると、2:30 より前に「今日」を押した場合は前日の日記を開く/作成します。時 0–23、分 0–59。",
+    "hourLabel": "時",
+    "minuteLabel": "分"
+  },
+  "weekly": {
+    "enable": "週次ノートを有効化",
+    "pathLabel": "週次ノートの保存パス",
+    "templateLabel": "週次ノートのテンプレートパス",
+    "pathHint": "日付テンプレート変数を使用できます。例: /Daily Notes/{{now | date \"2006/01\"}}/{{now | date \"2006\"}}-W{{weekly}} — {{weekly}} は週番号です。",
+    "templateHint": "例: weekly-template.md — このファイルを workspace/data/templates/ に置いてください。空欄の場合はテンプレートを適用しません。",
+    "pathRequired": "週次ノートの保存パスは必須です。"
+  },
+  "monthly": {
+    "enable": "月次ノートを有効化",
+    "pathLabel": "月次ノートの保存パス",
+    "templateLabel": "月次ノートのテンプレートパス",
+    "pathHint": "日付テンプレート変数を使用できます。例: /Daily Notes/{{now | date \"2006/01\"}}。",
+    "templateHint": "例: monthly-template.md — このファイルを workspace/data/templates/ に置いてください。空欄の場合はテンプレートを適用しません。",
+    "pathRequired": "月次ノートの保存パスは必須です。"
+  },
+  "yearly": {
+    "enable": "年次ノートを有効化",
+    "pathLabel": "年次ノートの保存パス",
+    "templateLabel": "年次ノートのテンプレートパス",
+    "pathHint": "日付テンプレート変数を使用できます。例: /Daily Notes/Yearly/{{now | date \"2006\"}}。",
+    "templateHint": "例: yearly-template.md — このファイルを workspace/data/templates/ に置いてください。空欄の場合はテンプレートを適用しません。",
+    "pathRequired": "年次ノートの保存パスは必須です。"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "openCalendar": "เปิดปฏิทิน",
+  "tabName": "ปฏิทิน",
+  "placeholder": "เลือกสมุดบันทึก...",
+  "msg": {
+    "begin": "[ปลั๊กอินปฏิทิน]",
+    "notNoteBook": "ไม่สามารถดึงสมุดบันทึกปัจจุบันได้ โปรดตั้งค่าด้วยตนเอง",
+    "refreshing": "กำลังรีเฟรช โปรดรอสักครู่",
+    "weeklyPathNotSet": "ข้อผิดพลาด: ยังไม่ได้ตั้งค่าเส้นทางบันทึกรายสัปดาห์",
+    "confirmCreateDailyNote": "ยังไม่มีบันทึกรายวัน สร้างหรือไม่?",
+    "failedToCreateWeeklyNote": "เปิด/สร้างบันทึกรายสัปดาห์ไม่สำเร็จ",
+    "confirm": "ยืนยัน",
+    "cancel": "ยกเลิก",
+    "pleaseConfirm": "โปรดยืนยัน",
+    "createdDailyNote": "สร้างบันทึกรายวันแล้ว",
+    "createDailyNoteFailed": "สร้างบันทึกรายวันไม่สำเร็จ",
+    "createdWeeklyNote": "สร้างบันทึกรายสัปดาห์แล้ว",
+    "createWeeklyNoteFailed": "สร้างบันทึกรายสัปดาห์ไม่สำเร็จ",
+    "periodicPathAutoDisabled": "พบเส้นทางจัดเก็บว่าง และปิดสวิตช์ที่เกี่ยวข้องโดยอัตโนมัติ: {items}"
+  },
+  "position": {
+    "title": "ตำแหน่งปุ่ม",
+    "topLeft": "บนซ้าย",
+    "topRight": "บนขวา",
+    "dock": "ด็อก"
+  },
+  "weekStart": {
+    "title": "สัปดาห์เริ่มต้นที่",
+    "sunday": "วันอาทิตย์",
+    "monday": "วันจันทร์"
+  },
+  "showWeekNum": {
+    "title": "แสดงหมายเลขสัปดาห์"
+  },
+  "settingsTabs": {
+    "basic": "การตั้งค่าแผง",
+    "periodic": "การตั้งค่าบันทึกตามช่วงเวลา",
+    "advanced": "ขั้นสูง"
+  },
+  "dayRolloverHour": {
+    "title": "วันใหม่เริ่มที่",
+    "hint": "ก่อนเวลานี้ \"วันนี้\" ยังถือเป็นวันก่อนหน้า ตัวอย่างเช่น ตั้งเป็น 02:30 แล้วกด วันนี้ ก่อน 2:30 จะเปิด/สร้างบันทึกของวันก่อน ชั่วโมง 0–23 นาที 0–59",
+    "hourLabel": "ชั่วโมง",
+    "minuteLabel": "นาที"
+  },
+  "weekly": {
+    "enable": "เปิดใช้บันทึกรายสัปดาห์",
+    "pathLabel": "เส้นทางบันทึกรายสัปดาห์",
+    "templateLabel": "เส้นทางเทมเพลตรายสัปดาห์",
+    "pathHint": "สามารถใช้ตัวแปรเทมเพลตวันที่ได้ เช่น /Daily Notes/{{now | date \"2006/01\"}}/{{now | date \"2006\"}}-W{{weekly}} — {{weekly}} คือหมายเลขสัปดาห์",
+    "templateHint": "เช่น weekly-template.md — วางไฟล์นี้ไว้ที่ workspace/data/templates/ เว้นว่างหากไม่ต้องการใช้เทมเพลต",
+    "pathRequired": "ต้องระบุเส้นทางบันทึกรายสัปดาห์"
+  },
+  "monthly": {
+    "enable": "เปิดใช้บันทึกรายเดือน",
+    "pathLabel": "เส้นทางบันทึกรายเดือน",
+    "templateLabel": "เส้นทางเทมเพลตรายเดือน",
+    "pathHint": "สามารถใช้ตัวแปรเทมเพลตวันที่ได้ เช่น /Daily Notes/{{now | date \"2006/01\"}}",
+    "templateHint": "เช่น monthly-template.md — วางไฟล์นี้ไว้ที่ workspace/data/templates/ เว้นว่างหากไม่ต้องการใช้เทมเพลต",
+    "pathRequired": "ต้องระบุเส้นทางบันทึกรายเดือน"
+  },
+  "yearly": {
+    "enable": "เปิดใช้บันทึกรายปี",
+    "pathLabel": "เส้นทางบันทึกรายปี",
+    "templateLabel": "เส้นทางเทมเพลตรายปี",
+    "pathHint": "สามารถใช้ตัวแปรเทมเพลตวันที่ได้ เช่น /Daily Notes/Yearly/{{now | date \"2006\"}}",
+    "templateHint": "เช่น yearly-template.md — วางไฟล์นี้ไว้ที่ workspace/data/templates/ เว้นว่างหากไม่ต้องการใช้เทมเพลต",
+    "pathRequired": "ต้องระบุเส้นทางบันทึกรายปี"
+  }
+}

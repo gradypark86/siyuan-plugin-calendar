@@ -1,6 +1,6 @@
 import App from './App.vue';
-import { createApp } from 'vue';
-import { Plugin, Menu, Setting, getFrontend } from 'siyuan';
+import { createApp, type App as VueApp } from 'vue';
+import { Plugin, Menu, Dialog, getFrontend } from 'siyuan';
 import {
   app,
   i18n,
@@ -18,16 +18,20 @@ import {
   yearlyEnabled,
   yearlyPath,
   yearlyTemplatePath,
+  dayRolloverHour,
+  dayRolloverMinute,
 } from './hooks/useSiYuan';
 import SettingsTabs from './lib/SettingsTabs.vue';
 import './index.less';
 import showMessage from 'siyuan';
+import { normalizeDayRolloverHour, normalizeDayRolloverMinute } from './utils/dayRollover';
 
 const STORAGE_NAME = 'arco-calendar-entry';
 
 export default class ArcoCalendarPlugin extends Plugin {
   private topEle!: HTMLElement;
   private menuEle!: HTMLElement;
+  private settingVueApp: VueApp | null = null;
 
   onload() {
     i18n.value = this.i18n;
@@ -41,6 +45,8 @@ export default class ArcoCalendarPlugin extends Plugin {
     console.log(this.i18n.byePlugin);
     this.topEle?.remove();
     this.menuEle?.remove();
+    this.settingVueApp?.unmount();
+    this.settingVueApp = null;
   }
 
   private async init() {
@@ -59,6 +65,8 @@ export default class ArcoCalendarPlugin extends Plugin {
         yearlyEnabled: false,
         yearlyPath: '',
         yearlyTemplatePath: '',
+        dayRolloverHour: 0,
+        dayRolloverMinute: 0,
       });
       await this.loadData(STORAGE_NAME);
       position.value = 'top-left';
@@ -73,6 +81,8 @@ export default class ArcoCalendarPlugin extends Plugin {
       yearlyEnabled.value = false;
       yearlyPath.value = '';
       yearlyTemplatePath.value = '';
+      dayRolloverHour.value = 0;
+      dayRolloverMinute.value = 0;
     } else {
       position.value = data.position;
       if (data.weekStart !== undefined) {
@@ -108,6 +118,12 @@ export default class ArcoCalendarPlugin extends Plugin {
       if (data.yearlyTemplatePath !== undefined) {
         yearlyTemplatePath.value = String(data.yearlyTemplatePath);
       }
+      if (data.dayRolloverHour !== undefined) {
+        dayRolloverHour.value = normalizeDayRolloverHour(data.dayRolloverHour);
+      }
+      if (data.dayRolloverMinute !== undefined) {
+        dayRolloverMinute.value = normalizeDayRolloverMinute(data.dayRolloverMinute);
+      }
 
       // Path-required guard for periodic notes:
       // if enabled but path is empty, force switch off to keep state valid.
@@ -128,75 +144,132 @@ export default class ArcoCalendarPlugin extends Plugin {
     } else if (position.value === 'dock') {
       this.addDockItem();
     }
-    this.initSetting();
   }
-  
-  private initSetting() {
-    this.setting = new Setting({
-      height: 'auto',
-      width: '500px',
-      confirmCallback: async () => {
-        const weeklyPathValue = String(weeklyPath.value || '').trim();
-        const monthlyPathValue = String(monthlyPath.value || '').trim();
-        const yearlyPathValue = String(yearlyPath.value || '').trim();
 
-        let weeklyEnabledValue = Boolean(weeklyEnabled.value);
-        let monthlyEnabledValue = Boolean(monthlyEnabled.value);
-        let yearlyEnabledValue = Boolean(yearlyEnabled.value);
-        const autoDisabled: string[] = [];
-        const weeklyPathLabel = i18n.value.weekly?.pathLabel || 'Weekly notes path';
-        const monthlyPathLabel = i18n.value.monthly?.pathLabel || 'Monthly notes path';
-        const yearlyPathLabel = i18n.value.yearly?.pathLabel || 'Yearly notes path';
+  /**
+   * Custom settings dialog (edge-to-edge left-right layout).
+   * Avoids official Setting.addItem wrapper which injects outer b3-label padding/border.
+   */
+  openSetting() {
+    const cancelLabel = i18n.value?.msg?.cancel || 'Cancel';
+    const saveLabel = i18n.value?.msg?.confirm || 'Save';
+    const title =
+      this.displayName ||
+      this.i18n?.tabName ||
+      this.name ||
+      'Calendar';
 
-        if (weeklyEnabledValue && !weeklyPathValue) {
-          weeklyEnabledValue = false;
-          weeklyEnabled.value = false;
-          autoDisabled.push(weeklyPathLabel);
-        }
-        if (monthlyEnabledValue && !monthlyPathValue) {
-          monthlyEnabledValue = false;
-          monthlyEnabled.value = false;
-          autoDisabled.push(monthlyPathLabel);
-        }
-        if (yearlyEnabledValue && !yearlyPathValue) {
-          yearlyEnabledValue = false;
-          yearlyEnabled.value = false;
-          autoDisabled.push(yearlyPathLabel);
-        }
-
-        if (autoDisabled.length > 0) {
-          const msgTpl = i18n.value.msg?.periodicPathAutoDisabled
-            || 'Detected empty storage paths and automatically disabled related toggles: {items}';
-          showMessage(msgTpl.replace('{items}', autoDisabled.join('、')));
-        }
-
-        const saveObj: any = {
-          position: position.value,
-          weekStart: Number(weekStart.value),
-          showWeekNum: showWeekNum.value,
-          weeklyEnabled: weeklyEnabledValue,
-          weeklyPath: weeklyPathValue,
-          weeklyTemplatePath: weeklyTemplatePath.value,
-          monthlyEnabled: monthlyEnabledValue,
-          monthlyPath: monthlyPathValue,
-          monthlyTemplatePath: monthlyTemplatePath.value,
-          yearlyEnabled: yearlyEnabledValue,
-          yearlyPath: yearlyPathValue,
-          yearlyTemplatePath: yearlyTemplatePath.value,
-        };
-        await this.saveData(STORAGE_NAME, saveObj);
-        window.location.reload();
+    const dialog = new Dialog({
+      title,
+      // Do NOT use class "b3-dialog__content" here — it has default padding: 16px 24px
+      // which creates the white frame around the panel.
+      content: `
+        <div id="calendar-setting-panel" class="calendar-setting-dialog__panel" style="flex:1;min-height:0;overflow:hidden;height:100%;"></div>
+        <div class="b3-dialog__action">
+          <button class="b3-button b3-button--cancel" data-action="cancel">${cancelLabel}</button>
+          <div class="fn__space"></div>
+          <button class="b3-button b3-button--text" data-action="save">${saveLabel}</button>
+        </div>
+      `,
+      width: isMobile.value ? '100%' : '50rem',
+      height: isMobile.value ? '100%' : '34rem',
+      destroyCallback: () => {
+        this.settingVueApp?.unmount();
+        this.settingVueApp = null;
       },
     });
 
-    // Tabbed settings: basic settings + periodic notes settings
-    const settingsTabsEle = document.createElement('div');
-    settingsTabsEle.style.width = '100%';
-    createApp(SettingsTabs).mount(settingsTabsEle);
-    this.setting.addItem({
-      title: '',
-      actionElement: settingsTabsEle,
+    // Mark container for scoped CSS overrides.
+    const container = dialog.element.querySelector(
+      '.b3-dialog__container'
+    ) as HTMLElement | null;
+    container?.classList.add('calendar-setting-dialog');
+
+    // Flatten body so the panel fills edge-to-edge under the header / above actions.
+    const body = dialog.element.querySelector(
+      '.b3-dialog__body'
+    ) as HTMLElement | null;
+    if (body) {
+      body.style.cssText =
+        'padding:0;margin:0;border:none;box-shadow:none;overflow:hidden;' +
+        'display:flex;flex-direction:column;flex:1;min-height:0;' +
+        'background:var(--b3-theme-surface);box-sizing:border-box;';
+    }
+    if (container) {
+      container.style.overflow = 'hidden';
+    }
+
+    const mountEl = dialog.element.querySelector(
+      '#calendar-setting-panel'
+    ) as HTMLElement | null;
+    if (mountEl) {
+      this.settingVueApp?.unmount();
+      this.settingVueApp = createApp(SettingsTabs);
+      this.settingVueApp.mount(mountEl);
+    }
+
+    const cancelBtn = dialog.element.querySelector('[data-action="cancel"]') as HTMLButtonElement | null;
+    const saveBtn = dialog.element.querySelector('[data-action="save"]') as HTMLButtonElement | null;
+    cancelBtn?.addEventListener('click', () => dialog.destroy());
+    saveBtn?.addEventListener('click', async () => {
+      await this.saveSettings();
+      dialog.destroy();
+      window.location.reload();
     });
+  }
+
+  private async saveSettings() {
+    const weeklyPathValue = String(weeklyPath.value || '').trim();
+    const monthlyPathValue = String(monthlyPath.value || '').trim();
+    const yearlyPathValue = String(yearlyPath.value || '').trim();
+
+    let weeklyEnabledValue = Boolean(weeklyEnabled.value);
+    let monthlyEnabledValue = Boolean(monthlyEnabled.value);
+    let yearlyEnabledValue = Boolean(yearlyEnabled.value);
+    const autoDisabled: string[] = [];
+    const weeklyPathLabel = i18n.value.weekly?.pathLabel || 'Weekly notes path';
+    const monthlyPathLabel = i18n.value.monthly?.pathLabel || 'Monthly notes path';
+    const yearlyPathLabel = i18n.value.yearly?.pathLabel || 'Yearly notes path';
+
+    if (weeklyEnabledValue && !weeklyPathValue) {
+      weeklyEnabledValue = false;
+      weeklyEnabled.value = false;
+      autoDisabled.push(weeklyPathLabel);
+    }
+    if (monthlyEnabledValue && !monthlyPathValue) {
+      monthlyEnabledValue = false;
+      monthlyEnabled.value = false;
+      autoDisabled.push(monthlyPathLabel);
+    }
+    if (yearlyEnabledValue && !yearlyPathValue) {
+      yearlyEnabledValue = false;
+      yearlyEnabled.value = false;
+      autoDisabled.push(yearlyPathLabel);
+    }
+
+    if (autoDisabled.length > 0) {
+      const msgTpl = i18n.value.msg?.periodicPathAutoDisabled
+        || 'Detected empty storage paths and automatically disabled related toggles: {items}';
+      showMessage(msgTpl.replace('{items}', autoDisabled.join('、')));
+    }
+
+    const saveObj: any = {
+      position: position.value,
+      weekStart: Number(weekStart.value),
+      showWeekNum: showWeekNum.value,
+      weeklyEnabled: weeklyEnabledValue,
+      weeklyPath: weeklyPathValue,
+      weeklyTemplatePath: weeklyTemplatePath.value,
+      monthlyEnabled: monthlyEnabledValue,
+      monthlyPath: monthlyPathValue,
+      monthlyTemplatePath: monthlyTemplatePath.value,
+      yearlyEnabled: yearlyEnabledValue,
+      yearlyPath: yearlyPathValue,
+      yearlyTemplatePath: yearlyTemplatePath.value,
+      dayRolloverHour: normalizeDayRolloverHour(dayRolloverHour.value),
+      dayRolloverMinute: normalizeDayRolloverMinute(dayRolloverMinute.value),
+    };
+    await this.saveData(STORAGE_NAME, saveObj);
   }
 
   private addTopItem(direction: 'left' | 'right') {

@@ -1,0 +1,70 @@
+{
+  "openCalendar": "Kalender öffnen",
+  "tabName": "Kalender",
+  "placeholder": "Notizbuch auswählen...",
+  "msg": {
+    "begin": "[Kalender-Plugin]",
+    "notNoteBook": "Aktuelles Notizbuch konnte nicht geladen werden, bitte manuell festlegen",
+    "refreshing": "Wird aktualisiert, bitte warten",
+    "weeklyPathNotSet": "Fehler: Der Speicherpfad für Wochennotizen ist nicht gesetzt.",
+    "confirmCreateDailyNote": "Tagesnotiz existiert nicht. Erstellen?",
+    "failedToCreateWeeklyNote": "Wochennotiz konnte nicht geöffnet/erstellt werden",
+    "confirm": "Bestätigen",
+    "cancel": "Abbrechen",
+    "pleaseConfirm": "Bitte bestätigen",
+    "createdDailyNote": "Tagesnotiz erstellt",
+    "createDailyNoteFailed": "Tagesnotiz konnte nicht erstellt werden",
+    "createdWeeklyNote": "Wochennotiz erstellt",
+    "createWeeklyNoteFailed": "Wochennotiz konnte nicht erstellt werden",
+    "periodicPathAutoDisabled": "Leere Speicherpfade erkannt und zugehörige Schalter automatisch deaktiviert: {items}"
+  },
+  "position": {
+    "title": "Position des Buttons",
+    "topLeft": "Oben links",
+    "topRight": "Oben rechts",
+    "dock": "Dock"
+  },
+  "weekStart": {
+    "title": "Woche beginnt am",
+    "sunday": "Sonntag",
+    "monday": "Montag"
+  },
+  "showWeekNum": {
+    "title": "Kalenderwoche anzeigen"
+  },
+  "settingsTabs": {
+    "basic": "Paneleinstellungen",
+    "periodic": "Periodische Notizen",
+    "advanced": "Erweitert"
+  },
+  "dayRolloverHour": {
+    "title": "Neuer Tag beginnt um",
+    "hint": "Vor dieser Uhrzeit wird „heute“ noch als Vortag behandelt. Beispiel: Bei 02:30 öffnet/erstellt „Heute“ vor 2:30 die Notiz vom Vortag. Stunde 0–23, Minute 0–59.",
+    "hourLabel": "Stunde",
+    "minuteLabel": "Minute"
+  },
+  "weekly": {
+    "enable": "Wochennotizen aktivieren",
+    "pathLabel": "Pfad für Wochennotizen",
+    "templateLabel": "Vorlagenpfad für Wochennotizen",
+    "pathHint": "Sie können Datums-Template-Variablen verwenden, z. B. /Daily Notes/{{now | date \"2006/01\"}}/{{now | date \"2006\"}}-W{{weekly}} — {{weekly}} ist die Wochennummer.",
+    "templateHint": "z. B. weekly-template.md — diese Datei unter workspace/data/templates/ ablegen. Leer lassen, um keine Vorlage anzuwenden.",
+    "pathRequired": "Der Pfad für Wochennotizen ist erforderlich."
+  },
+  "monthly": {
+    "enable": "Monatsnotizen aktivieren",
+    "pathLabel": "Pfad für Monatsnotizen",
+    "templateLabel": "Vorlagenpfad für Monatsnotizen",
+    "pathHint": "Sie können Datums-Template-Variablen verwenden, z. B. /Daily Notes/{{now | date \"2006/01\"}}.",
+    "templateHint": "z. B. monthly-template.md — diese Datei unter workspace/data/templates/ ablegen. Leer lassen, um keine Vorlage anzuwenden.",
+    "pathRequired": "Der Pfad für Monatsnotizen ist erforderlich."
+  },
+  "yearly": {
+    "enable": "Jahresnotizen aktivieren",
+    "pathLabel": "Pfad für Jahresnotizen",
+    "templateLabel": "Vorlagenpfad für Jahresnotizen",
+    "pathHint": "Sie können Datums-Template-Variablen verwenden, z. B. /Daily Notes/Yearly/{{now | date \"2006\"}}.",
+    "templateHint": "z. B. yearly-template.md — diese Datei unter workspace/data/templates/ ablegen. Leer lassen, um keine Vorlage anzuwenden.",
+    "pathRequired": "Der Pfad für Jahresnotizen ist erforderlich."
+  }
+}

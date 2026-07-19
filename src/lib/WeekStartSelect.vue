@@ -2,7 +2,7 @@
   <select
     class="b3-select"
     v-model.number="weekStart"
-    style="width: 200px;"
+    style="width: 180px;"
     :title="i18n.value?.weekStart?.title || 'Week starts on'"
     :aria-label="i18n.value?.weekStart?.title || 'Week starts on'"
   >

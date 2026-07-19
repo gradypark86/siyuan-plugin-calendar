@@ -21,3 +21,7 @@ export const monthlyTemplatePath = ref<string>('');
 export const yearlyEnabled = ref<boolean>(false);
 export const yearlyPath = ref<string>('');
 export const yearlyTemplatePath = ref<string>('');
+/** Hour (0-23) when a new calendar day starts. Before this time, "today" is still yesterday. Default 0 = midnight. */
+export const dayRolloverHour = ref<number>(0);
+/** Minute (0-59) paired with dayRolloverHour. Default 0. */
+export const dayRolloverMinute = ref<number>(0);

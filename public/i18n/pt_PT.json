@@ -1,0 +1,70 @@
+{
+  "openCalendar": "Abrir calendário",
+  "tabName": "Calendário",
+  "placeholder": "Selecionar caderno...",
+  "msg": {
+    "begin": "[Plugin de Calendário]",
+    "notNoteBook": "Falha ao obter o caderno atual, defina-o manualmente",
+    "refreshing": "A atualizar, aguarde",
+    "weeklyPathNotSet": "Erro: o caminho das notas semanais não está definido.",
+    "confirmCreateDailyNote": "A nota diária não existe. Criar?",
+    "failedToCreateWeeklyNote": "Falha ao abrir/criar a nota semanal",
+    "confirm": "Confirmar",
+    "cancel": "Cancelar",
+    "pleaseConfirm": "Por favor confirme",
+    "createdDailyNote": "Nota diária criada",
+    "createDailyNoteFailed": "Falha ao criar a nota diária",
+    "createdWeeklyNote": "Nota semanal criada",
+    "createWeeklyNoteFailed": "Falha ao criar a nota semanal",
+    "periodicPathAutoDisabled": "Foram detetados caminhos de armazenamento vazios e os interruptores relacionados foram desativados automaticamente: {items}"
+  },
+  "position": {
+    "title": "Posição do botão",
+    "topLeft": "Superior esquerdo",
+    "topRight": "Superior direito",
+    "dock": "Dock"
+  },
+  "weekStart": {
+    "title": "A semana começa em",
+    "sunday": "Domingo",
+    "monday": "Segunda-feira"
+  },
+  "showWeekNum": {
+    "title": "Mostrar número da semana"
+  },
+  "settingsTabs": {
+    "basic": "Definições do painel",
+    "periodic": "Notas periódicas",
+    "advanced": "Avançado"
+  },
+  "dayRolloverHour": {
+    "title": "O novo dia começa às",
+    "hint": "Antes desta hora, «hoje» ainda é tratado como o dia anterior. Por exemplo, com 02:30, clicar em Hoje antes das 2:30 abre/cria a nota do dia anterior. Hora 0–23, minuto 0–59.",
+    "hourLabel": "Hora",
+    "minuteLabel": "Minuto"
+  },
+  "weekly": {
+    "enable": "Ativar notas semanais",
+    "pathLabel": "Caminho das notas semanais",
+    "templateLabel": "Caminho do modelo semanal",
+    "pathHint": "Pode usar variáveis de modelo de data, p. ex. /Daily Notes/{{now | date \"2006/01\"}}/{{now | date \"2006\"}}-W{{weekly}} — {{weekly}} é o número da semana.",
+    "templateHint": "p. ex. weekly-template.md — coloque este ficheiro em workspace/data/templates/. Deixe vazio para não aplicar o modelo.",
+    "pathRequired": "O caminho das notas semanais é obrigatório."
+  },
+  "monthly": {
+    "enable": "Ativar notas mensais",
+    "pathLabel": "Caminho das notas mensais",
+    "templateLabel": "Caminho do modelo mensal",
+    "pathHint": "Pode usar variáveis de modelo de data, p. ex. /Daily Notes/{{now | date \"2006/01\"}}.",
+    "templateHint": "p. ex. monthly-template.md — coloque este ficheiro em workspace/data/templates/. Deixe vazio para não aplicar o modelo.",
+    "pathRequired": "O caminho das notas mensais é obrigatório."
+  },
+  "yearly": {
+    "enable": "Ativar notas anuais",
+    "pathLabel": "Caminho das notas anuais",
+    "templateLabel": "Caminho do modelo anual",
+    "pathHint": "Pode usar variáveis de modelo de data, p. ex. /Daily Notes/Yearly/{{now | date \"2006\"}}.",
+    "templateHint": "p. ex. yearly-template.md — coloque este ficheiro em workspace/data/templates/. Deixe vazio para não aplicar o modelo.",
+    "pathRequired": "O caminho das notas anuais é obrigatório."
+  }
+}

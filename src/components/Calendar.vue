@@ -96,6 +96,7 @@ import { useLocale, formatMsg } from '@/hooks/useLocale';
 import { eventBus, weekStart, showWeekNum, weeklyEnabled, i18n } from '@/hooks/useSiYuan';
 import { CusNotebook } from '@/utils/notebook';
 import { refreshSql } from '@/api/utils';
+import { getEffectiveNow } from '@/utils/dayRollover';
 import ConfirmDialog from './ConfirmDialog.vue';
 
 const { locale, localeType } = useLocale();
@@ -106,8 +107,9 @@ const { notebook } = toRefs(props);
 const confirmDialogRef = ref();
 
 // ===== 状态 =====
-const displayedMonth = ref(dayjs());
-const thisPanelDate = ref(new Date());
+// Initial view follows day-rollover so pre-rollover hours still land on the previous day.
+const displayedMonth = ref(getEffectiveNow());
+const thisPanelDate = ref(getEffectiveNow().toDate());
 
 // 年月选择器状态
 const monthPickerRef = ref<HTMLElement | null>(null);
@@ -384,9 +386,10 @@ function nextMonth() {
 }
 
 function clickToday() {
-  displayedMonth.value = dayjs();
-  changeMonth(dayjs().toDate());
-  openDailyNote(dayjs().toDate());
+  const effectiveToday = getEffectiveNow();
+  displayedMonth.value = effectiveToday;
+  changeMonth(effectiveToday.toDate());
+  openDailyNote(effectiveToday.toDate());
 }
 
 /**
@@ -395,7 +398,8 @@ function clickToday() {
 function getDayClasses(date: any) {
   const dateStr = date.format('YYYY-MM-DD');
   const isOtherMonth = !date.isSame(displayedMonth.value, 'month');
-  const isToday = date.isSame(dayjs(), 'day');
+  // "Today" follows day-rollover hour so pre-rollover hours still highlight yesterday.
+  const isToday = date.isSame(getEffectiveNow(), 'day');
   const isWeekend = [0, 6].includes(date.day());
   const hasNote = existDailyNotesMap.value.has(dateStr);
   const isSelected = selectedDate.value === dateStr && !isOtherMonth;
@@ -593,7 +597,7 @@ eventBus.value?.on('ws-main', async ({ detail }) => {
 });
 
 // 初始化
-getExistDate(new Date());
+getExistDate(getEffectiveNow().toDate());
 loadExistWeeklyNotes();
 </script>
 

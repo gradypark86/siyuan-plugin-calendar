@@ -1,0 +1,70 @@
+{
+  "openCalendar": "Mở lịch",
+  "tabName": "Lịch",
+  "placeholder": "Chọn sổ tay...",
+  "msg": {
+    "begin": "[Plugin Lịch]",
+    "notNoteBook": "Không lấy được sổ tay hiện tại, vui lòng thiết lập thủ công",
+    "refreshing": "Đang làm mới, vui lòng chờ",
+    "weeklyPathNotSet": "Lỗi: chưa thiết lập đường dẫn ghi chú tuần.",
+    "confirmCreateDailyNote": "Ghi chú hàng ngày không tồn tại. Tạo?",
+    "failedToCreateWeeklyNote": "Mở/tạo ghi chú tuần thất bại",
+    "confirm": "Xác nhận",
+    "cancel": "Hủy",
+    "pleaseConfirm": "Vui lòng xác nhận",
+    "createdDailyNote": "Đã tạo ghi chú hàng ngày",
+    "createDailyNoteFailed": "Tạo ghi chú hàng ngày thất bại",
+    "createdWeeklyNote": "Đã tạo ghi chú tuần",
+    "createWeeklyNoteFailed": "Tạo ghi chú tuần thất bại",
+    "periodicPathAutoDisabled": "Phát hiện đường dẫn lưu trống và đã tự động tắt các công tắc liên quan: {items}"
+  },
+  "position": {
+    "title": "Vị trí nút",
+    "topLeft": "Trên bên trái",
+    "topRight": "Trên bên phải",
+    "dock": "Dock"
+  },
+  "weekStart": {
+    "title": "Tuần bắt đầu vào",
+    "sunday": "Chủ nhật",
+    "monday": "Thứ hai"
+  },
+  "showWeekNum": {
+    "title": "Hiển thị số tuần"
+  },
+  "settingsTabs": {
+    "basic": "Cài đặt bảng",
+    "periodic": "Cài đặt ghi chú định kỳ",
+    "advanced": "Nâng cao"
+  },
+  "dayRolloverHour": {
+    "title": "Ngày mới bắt đầu lúc",
+    "hint": "Trước thời điểm này, \"hôm nay\" vẫn được coi là ngày hôm trước. Ví dụ: đặt 02:30 thì nhấn Hôm nay trước 2:30 sẽ mở/tạo ghi chú của ngày hôm trước. Giờ 0–23, phút 0–59.",
+    "hourLabel": "Giờ",
+    "minuteLabel": "Phút"
+  },
+  "weekly": {
+    "enable": "Bật ghi chú tuần",
+    "pathLabel": "Đường dẫn ghi chú tuần",
+    "templateLabel": "Đường dẫn mẫu ghi chú tuần",
+    "pathHint": "Bạn có thể dùng biến mẫu ngày, ví dụ /Daily Notes/{{now | date \"2006/01\"}}/{{now | date \"2006\"}}-W{{weekly}} — {{weekly}} là số tuần.",
+    "templateHint": "ví dụ weekly-template.md — đặt file này trong workspace/data/templates/. Để trống để bỏ qua mẫu.",
+    "pathRequired": "Đường dẫn ghi chú tuần là bắt buộc."
+  },
+  "monthly": {
+    "enable": "Bật ghi chú tháng",
+    "pathLabel": "Đường dẫn ghi chú tháng",
+    "templateLabel": "Đường dẫn mẫu ghi chú tháng",
+    "pathHint": "Bạn có thể dùng biến mẫu ngày, ví dụ /Daily Notes/{{now | date \"2006/01\"}}.",
+    "templateHint": "ví dụ monthly-template.md — đặt file này trong workspace/data/templates/. Để trống để bỏ qua mẫu.",
+    "pathRequired": "Đường dẫn ghi chú tháng là bắt buộc."
+  },
+  "yearly": {
+    "enable": "Bật ghi chú năm",
+    "pathLabel": "Đường dẫn ghi chú năm",
+    "templateLabel": "Đường dẫn mẫu ghi chú năm",
+    "pathHint": "Bạn có thể dùng biến mẫu ngày, ví dụ /Daily Notes/Yearly/{{now | date \"2006\"}}.",
+    "templateHint": "ví dụ yearly-template.md — đặt file này trong workspace/data/templates/. Để trống để bỏ qua mẫu.",
+    "pathRequired": "Đường dẫn ghi chú năm là bắt buộc."
+  }
+}

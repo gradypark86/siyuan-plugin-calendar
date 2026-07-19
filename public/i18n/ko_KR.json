@@ -1,0 +1,70 @@
+{
+  "openCalendar": "캘린더 열기",
+  "tabName": "캘린더",
+  "placeholder": "노트북 선택...",
+  "msg": {
+    "begin": "[캘린더 플러그인]",
+    "notNoteBook": "현재 노트북을 가져오지 못했습니다. 수동으로 설정해 주세요",
+    "refreshing": "새로고침 중입니다. 잠시만 기다려 주세요",
+    "weeklyPathNotSet": "오류: 주간 노트 저장 경로가 설정되지 않았습니다.",
+    "confirmCreateDailyNote": "일기가 없습니다. 생성할까요?",
+    "failedToCreateWeeklyNote": "주간 노트를 열거나 생성하지 못했습니다",
+    "confirm": "확인",
+    "cancel": "취소",
+    "pleaseConfirm": "확인해 주세요",
+    "createdDailyNote": "일기를 생성했습니다",
+    "createDailyNoteFailed": "일기 생성에 실패했습니다",
+    "createdWeeklyNote": "주간 노트를 생성했습니다",
+    "createWeeklyNoteFailed": "주간 노트 생성에 실패했습니다",
+    "periodicPathAutoDisabled": "저장 경로가 비어 있어 관련 스위치를 자동으로 껐습니다: {items}"
+  },
+  "position": {
+    "title": "버튼 위치",
+    "topLeft": "상단 왼쪽",
+    "topRight": "상단 오른쪽",
+    "dock": "독"
+  },
+  "weekStart": {
+    "title": "한 주의 시작",
+    "sunday": "일요일",
+    "monday": "월요일"
+  },
+  "showWeekNum": {
+    "title": "주 번호 표시"
+  },
+  "settingsTabs": {
+    "basic": "패널 설정",
+    "periodic": "주기 노트 설정",
+    "advanced": "고급 설정"
+  },
+  "dayRolloverHour": {
+    "title": "새 하루 시작 시각",
+    "hint": "이 시각 이전에는 「오늘」이 전날로 처리됩니다. 예: 02:30으로 설정하면 2:30 전에 「오늘」을 누를 때 전날 일기를 열거나 생성합니다. 시 0–23, 분 0–59.",
+    "hourLabel": "시",
+    "minuteLabel": "분"
+  },
+  "weekly": {
+    "enable": "주간 노트 사용",
+    "pathLabel": "주간 노트 저장 경로",
+    "templateLabel": "주간 노트 템플릿 경로",
+    "pathHint": "날짜 템플릿 변수를 사용할 수 있습니다. 예: /Daily Notes/{{now | date \"2006/01\"}}/{{now | date \"2006\"}}-W{{weekly}} — {{weekly}}는 주 번호입니다.",
+    "templateHint": "예: weekly-template.md — 이 파일을 workspace/data/templates/ 아래에 두세요. 비워 두면 템플릿을 적용하지 않습니다.",
+    "pathRequired": "주간 노트 저장 경로는 필수입니다."
+  },
+  "monthly": {
+    "enable": "월간 노트 사용",
+    "pathLabel": "월간 노트 저장 경로",
+    "templateLabel": "월간 노트 템플릿 경로",
+    "pathHint": "날짜 템플릿 변수를 사용할 수 있습니다. 예: /Daily Notes/{{now | date \"2006/01\"}}.",
+    "templateHint": "예: monthly-template.md — 이 파일을 workspace/data/templates/ 아래에 두세요. 비워 두면 템플릿을 적용하지 않습니다.",
+    "pathRequired": "월간 노트 저장 경로는 필수입니다."
+  },
+  "yearly": {
+    "enable": "연간 노트 사용",
+    "pathLabel": "연간 노트 저장 경로",
+    "templateLabel": "연간 노트 템플릿 경로",
+    "pathHint": "날짜 템플릿 변수를 사용할 수 있습니다. 예: /Daily Notes/Yearly/{{now | date \"2006\"}}.",
+    "templateHint": "예: yearly-template.md — 이 파일을 workspace/data/templates/ 아래에 두세요. 비워 두면 템플릿을 적용하지 않습니다.",
+    "pathRequired": "연간 노트 저장 경로는 필수입니다."
+  }
+}

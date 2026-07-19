@@ -15,8 +15,6 @@ import { weeklyEnabled } from '@/hooks/useSiYuan';
 
 <style scoped>
 .switch-container {
-  width: 200px;
-  height: 32px;
   display: flex;
   justify-content: flex-end;
   align-items: center;

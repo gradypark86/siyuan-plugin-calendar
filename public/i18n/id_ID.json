@@ -1,0 +1,70 @@
+{
+  "openCalendar": "Buka kalender",
+  "tabName": "Kalender",
+  "placeholder": "Pilih buku catatan...",
+  "msg": {
+    "begin": "[Plugin Kalender]",
+    "notNoteBook": "Gagal mendapatkan buku catatan saat ini, silakan atur secara manual",
+    "refreshing": "Sedang menyegarkan, harap tunggu",
+    "weeklyPathNotSet": "Kesalahan: jalur catatan mingguan belum diatur.",
+    "confirmCreateDailyNote": "Catatan harian tidak ada. Buat?",
+    "failedToCreateWeeklyNote": "Gagal membuka/membuat catatan mingguan",
+    "confirm": "Konfirmasi",
+    "cancel": "Batal",
+    "pleaseConfirm": "Harap konfirmasi",
+    "createdDailyNote": "Catatan harian dibuat",
+    "createDailyNoteFailed": "Gagal membuat catatan harian",
+    "createdWeeklyNote": "Catatan mingguan dibuat",
+    "createWeeklyNoteFailed": "Gagal membuat catatan mingguan",
+    "periodicPathAutoDisabled": "Terdeteksi jalur penyimpanan kosong dan sakelar terkait dinonaktifkan secara otomatis: {items}"
+  },
+  "position": {
+    "title": "Posisi tombol",
+    "topLeft": "Kiri atas",
+    "topRight": "Kanan atas",
+    "dock": "Dock"
+  },
+  "weekStart": {
+    "title": "Minggu dimulai pada",
+    "sunday": "Minggu",
+    "monday": "Senin"
+  },
+  "showWeekNum": {
+    "title": "Tampilkan nomor minggu"
+  },
+  "settingsTabs": {
+    "basic": "Pengaturan panel",
+    "periodic": "Pengaturan catatan periodik",
+    "advanced": "Lanjutan"
+  },
+  "dayRolloverHour": {
+    "title": "Hari baru dimulai pada",
+    "hint": "Sebelum waktu ini, \"hari ini\" masih diperlakukan sebagai hari sebelumnya. Misalnya, dengan 02:30, mengklik Hari Ini sebelum pukul 2:30 akan membuka/membuat catatan hari sebelumnya. Jam 0–23, menit 0–59.",
+    "hourLabel": "Jam",
+    "minuteLabel": "Menit"
+  },
+  "weekly": {
+    "enable": "Aktifkan catatan mingguan",
+    "pathLabel": "Jalur catatan mingguan",
+    "templateLabel": "Jalur templat mingguan",
+    "pathHint": "Anda dapat menggunakan variabel templat tanggal, mis. /Daily Notes/{{now | date \"2006/01\"}}/{{now | date \"2006\"}}-W{{weekly}} — {{weekly}} adalah nomor minggu.",
+    "templateHint": "mis. weekly-template.md — letakkan file ini di workspace/data/templates/. Biarkan kosong untuk melewatkan render templat.",
+    "pathRequired": "Jalur catatan mingguan wajib diisi."
+  },
+  "monthly": {
+    "enable": "Aktifkan catatan bulanan",
+    "pathLabel": "Jalur catatan bulanan",
+    "templateLabel": "Jalur templat bulanan",
+    "pathHint": "Anda dapat menggunakan variabel templat tanggal, mis. /Daily Notes/{{now | date \"2006/01\"}}.",
+    "templateHint": "mis. monthly-template.md — letakkan file ini di workspace/data/templates/. Biarkan kosong untuk melewatkan render templat.",
+    "pathRequired": "Jalur catatan bulanan wajib diisi."
+  },
+  "yearly": {
+    "enable": "Aktifkan catatan tahunan",
+    "pathLabel": "Jalur catatan tahunan",
+    "templateLabel": "Jalur templat tahunan",
+    "pathHint": "Anda dapat menggunakan variabel templat tanggal, mis. /Daily Notes/Yearly/{{now | date \"2006\"}}.",
+    "templateHint": "mis. yearly-template.md — letakkan file ini di workspace/data/templates/. Biarkan kosong untuk melewatkan render templat.",
+    "pathRequired": "Jalur catatan tahunan wajib diisi."
+  }
+}

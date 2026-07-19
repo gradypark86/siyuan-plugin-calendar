@@ -38,7 +38,14 @@
   },
   "settingsTabs": {
     "basic": "Panel Settings",
-    "periodic": "Periodic Notes Settings"
+    "periodic": "Periodic Notes Settings",
+    "advanced": "Advanced"
+  },
+  "dayRolloverHour": {
+    "title": "New day starts at",
+    "hint": "Before this time, \"today\" is still treated as the previous day. For example, with 02:30, clicking Today before 2:30 AM opens/creates yesterday's daily note. Hour 0–23, minute 0–59.",
+    "hourLabel": "Hour",
+    "minuteLabel": "Minute"
   }
   ,"weekly": {
     "enable": "Enable weekly notes",

@@ -38,7 +38,14 @@
   },
   "settingsTabs": {
     "basic": "面板设置",
-    "periodic": "周期笔记设置"
+    "periodic": "周期笔记设置",
+    "advanced": "高级设置"
+  },
+  "dayRolloverHour": {
+    "title": "新一天开始于",
+    "hint": "在该时刻之前，「今天」仍按前一天处理。例如设为 02:30 时，凌晨 2:30 前点击「今」会打开/创建前一天的日记。时 0–23，分 0–59。",
+    "hourLabel": "时",
+    "minuteLabel": "分"
   }
   ,"weekly": {
     "enable": "周记开关",

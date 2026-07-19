@@ -121,14 +121,17 @@ const yearlyPathInvalid = computed(() => yearlyEnabled.value && !String(yearlyPa
   flex-direction: column;
   width: 100%;
   box-sizing: border-box;
-  margin-left: 0;
-  padding-left: 2px;
+  margin: 0;
+  padding: 0;
+  gap: 4px;
 }
 
 .period-section {
   width: 100%;
   border-radius: 6px;
   transition: opacity 0.2s ease;
+  border-top: 1px solid var(--b3-border-color);
+  padding-top: 4px;
 }
 
 .period-section.disabled {
@@ -146,54 +149,32 @@ const yearlyPathInvalid = computed(() => yearlyEnabled.value && !String(yearlyPa
   opacity: 0.45;
   filter: grayscale(0.2);
   pointer-events: none;
+  border: none;
+  padding: 0;
 }
 
-/* Row that mimics a standard b3-label structure */
-.mimic-setting-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  min-height: 32px;
-  padding-left: 0; /* Align with parent's left edge */
-}
-
-.mimic-title {
-  color: var(--b3-theme-on-surface);
-  font-size: 14px;
-  flex: 1;
-  text-align: left;
-  /* match the standard setting title appearance */
-  font-weight: 500;
-  opacity: 0.88;
-}
-
-.mimic-action {
-  display: flex;
-  align-items: center;
-  margin-left: auto;
-}
-
-/* Vertical layout group */
+/* Vertical layout group — full-width path / template fields */
 .vertical-group {
   display: flex;
   flex-direction: column;
   width: 100%;
-  margin-top: 12px;
+  margin: 10px 0 6px 0;
 }
 
 .group-label {
   color: var(--b3-theme-on-surface);
   font-size: 14px;
-  padding: 4px 0 8px 0;
+  font-weight: 500;
+  padding: 0 0 4px 0;
   text-align: left;
 }
 
 .hint {
   font-size: 12px;
   color: var(--b3-theme-on-surface);
-  opacity: 0.7;
-  margin-top: 6px;
+  opacity: 0.68;
+  margin: 0 0 8px 0;
+  line-height: 1.45;
   white-space: pre-wrap;
 }
 

@@ -2,7 +2,7 @@
   <select
     class="b3-select"
     v-model="position"
-    style="width: 200px;"
+    style="width: 180px;"
     :title="i18n.value?.position?.title || 'Position'"
     :aria-label="i18n.value?.position?.title || 'Position'"
   >

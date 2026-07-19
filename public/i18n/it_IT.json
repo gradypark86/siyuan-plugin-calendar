@@ -1,0 +1,70 @@
+{
+  "openCalendar": "Apri calendario",
+  "tabName": "Calendario",
+  "placeholder": "Seleziona notebook...",
+  "msg": {
+    "begin": "[Plugin Calendario]",
+    "notNoteBook": "Impossibile ottenere il notebook corrente, impostalo manualmente",
+    "refreshing": "Aggiornamento in corso, attendere",
+    "weeklyPathNotSet": "Errore: il percorso delle note settimanali non è impostato.",
+    "confirmCreateDailyNote": "La nota giornaliera non esiste. Crearla?",
+    "failedToCreateWeeklyNote": "Apertura/creazione della nota settimanale non riuscita",
+    "confirm": "Conferma",
+    "cancel": "Annulla",
+    "pleaseConfirm": "Conferma",
+    "createdDailyNote": "Nota giornaliera creata",
+    "createDailyNoteFailed": "Creazione della nota giornaliera non riuscita",
+    "createdWeeklyNote": "Nota settimanale creata",
+    "createWeeklyNoteFailed": "Creazione della nota settimanale non riuscita",
+    "periodicPathAutoDisabled": "Rilevati percorsi di archiviazione vuoti e interruttori correlati disattivati automaticamente: {items}"
+  },
+  "position": {
+    "title": "Posizione del pulsante",
+    "topLeft": "In alto a sinistra",
+    "topRight": "In alto a destra",
+    "dock": "Dock"
+  },
+  "weekStart": {
+    "title": "La settimana inizia di",
+    "sunday": "Domenica",
+    "monday": "Lunedì"
+  },
+  "showWeekNum": {
+    "title": "Mostra numero della settimana"
+  },
+  "settingsTabs": {
+    "basic": "Impostazioni pannello",
+    "periodic": "Note periodiche",
+    "advanced": "Avanzate"
+  },
+  "dayRolloverHour": {
+    "title": "Il nuovo giorno inizia alle",
+    "hint": "Prima di quest'ora, «oggi» viene ancora trattato come il giorno precedente. Ad esempio, con 02:30, facendo clic su Oggi prima delle 2:30 si apre/crea la nota del giorno precedente. Ora 0–23, minuto 0–59.",
+    "hourLabel": "Ora",
+    "minuteLabel": "Minuto"
+  },
+  "weekly": {
+    "enable": "Abilita note settimanali",
+    "pathLabel": "Percorso note settimanali",
+    "templateLabel": "Percorso modello settimanale",
+    "pathHint": "Puoi usare variabili di modello data, ad es. /Daily Notes/{{now | date \"2006/01\"}}/{{now | date \"2006\"}}-W{{weekly}} — {{weekly}} è il numero della settimana.",
+    "templateHint": "ad es. weekly-template.md — inserisci questo file in workspace/data/templates/. Lascia vuoto per non applicare il modello.",
+    "pathRequired": "Il percorso delle note settimanali è obbligatorio."
+  },
+  "monthly": {
+    "enable": "Abilita note mensili",
+    "pathLabel": "Percorso note mensili",
+    "templateLabel": "Percorso modello mensile",
+    "pathHint": "Puoi usare variabili di modello data, ad es. /Daily Notes/{{now | date \"2006/01\"}}.",
+    "templateHint": "ad es. monthly-template.md — inserisci questo file in workspace/data/templates/. Lascia vuoto per non applicare il modello.",
+    "pathRequired": "Il percorso delle note mensili è obbligatorio."
+  },
+  "yearly": {
+    "enable": "Abilita note annuali",
+    "pathLabel": "Percorso note annuali",
+    "templateLabel": "Percorso modello annuale",
+    "pathHint": "Puoi usare variabili di modello data, ad es. /Daily Notes/Yearly/{{now | date \"2006\"}}.",
+    "templateHint": "ad es. yearly-template.md — inserisci questo file in workspace/data/templates/. Lascia vuoto per non applicare il modello.",
+    "pathRequired": "Il percorso delle note annuali è obbligatorio."
+  }
+}

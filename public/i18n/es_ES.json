@@ -38,7 +38,14 @@
   },
   "settingsTabs": {
     "basic": "Configuración del panel",
-    "periodic": "Configuración de notas periódicas"
+    "periodic": "Configuración de notas periódicas",
+    "advanced": "Avanzado"
+  },
+  "dayRolloverHour": {
+    "title": "El nuevo día comienza a las",
+    "hint": "Antes de esta hora, «hoy» se sigue tratando como el día anterior. Por ejemplo, con 02:30, al pulsar Hoy antes de las 2:30 se abre/crea la nota del día anterior. Hora 0–23, minuto 0–59.",
+    "hourLabel": "Hora",
+    "minuteLabel": "Minuto"
   }
   ,"weekly": {
     "enable": "Habilitar notas semanales",
