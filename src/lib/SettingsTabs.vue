@@ -125,6 +125,22 @@
             <DayRolloverTimeInput />
           </div>
         </label>
+
+        <label class="fn__flex b3-label setting-item">
+          <div class="fn__flex-1">
+            {{ t.confirmCreateDailyNote?.title || 'Confirm before creating daily note' }}
+            <div class="b3-label__text">
+              {{
+                t.confirmCreateDailyNote?.hint ||
+                'When enabled, clicking a date without a daily note shows a confirmation dialog before creating it. Turn off to create immediately.'
+              }}
+            </div>
+          </div>
+          <span class="fn__space"></span>
+          <div class="setting-control">
+            <ConfirmCreateDailyToggle />
+          </div>
+        </label>
       </div>
     </div>
   </div>
@@ -141,6 +157,7 @@ import MonthlySettings from './MonthlySettings.vue';
 import YearlySettings from './YearlySettings.vue';
 import WeeklyNoteGroup from './WeeklyNoteGroup.vue';
 import DayRolloverTimeInput from './DayRolloverTimeInput.vue';
+import ConfirmCreateDailyToggle from './ConfirmCreateDailyToggle.vue';
 
 const activeTab = ref<'basic' | 'periodic' | 'advanced'>('basic');
 

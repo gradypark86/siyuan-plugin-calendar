@@ -20,6 +20,7 @@ import {
   yearlyTemplatePath,
   dayRolloverHour,
   dayRolloverMinute,
+  confirmCreateDailyNote,
 } from './hooks/useSiYuan';
 import SettingsTabs from './lib/SettingsTabs.vue';
 import './index.less';
@@ -67,6 +68,7 @@ export default class ArcoCalendarPlugin extends Plugin {
         yearlyTemplatePath: '',
         dayRolloverHour: 0,
         dayRolloverMinute: 0,
+        confirmCreateDailyNote: true,
       });
       await this.loadData(STORAGE_NAME);
       position.value = 'top-left';
@@ -83,6 +85,7 @@ export default class ArcoCalendarPlugin extends Plugin {
       yearlyTemplatePath.value = '';
       dayRolloverHour.value = 0;
       dayRolloverMinute.value = 0;
+      confirmCreateDailyNote.value = true;
     } else {
       position.value = data.position;
       if (data.weekStart !== undefined) {
@@ -123,6 +126,13 @@ export default class ArcoCalendarPlugin extends Plugin {
       }
       if (data.dayRolloverMinute !== undefined) {
         dayRolloverMinute.value = normalizeDayRolloverMinute(data.dayRolloverMinute);
+      }
+      // Default ON: only turn off when user explicitly saved false.
+      // Missing key (old configs / upgrades) keeps confirmCreateDailyNote = true.
+      if (data.confirmCreateDailyNote === false || data.confirmCreateDailyNote === true) {
+        confirmCreateDailyNote.value = data.confirmCreateDailyNote === true;
+      } else {
+        confirmCreateDailyNote.value = true;
       }
 
       // Path-required guard for periodic notes:
@@ -268,6 +278,7 @@ export default class ArcoCalendarPlugin extends Plugin {
       yearlyTemplatePath: yearlyTemplatePath.value,
       dayRolloverHour: normalizeDayRolloverHour(dayRolloverHour.value),
       dayRolloverMinute: normalizeDayRolloverMinute(dayRolloverMinute.value),
+      confirmCreateDailyNote: Boolean(confirmCreateDailyNote.value),
     };
     await this.saveData(STORAGE_NAME, saveObj);
   }

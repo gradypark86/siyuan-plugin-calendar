@@ -93,7 +93,7 @@ import dayjs from 'dayjs';
 import * as api from '@/api/api';
 import { openDoc } from '@/api/daily-note';
 import { useLocale, formatMsg } from '@/hooks/useLocale';
-import { eventBus, weekStart, showWeekNum, weeklyEnabled, i18n } from '@/hooks/useSiYuan';
+import { eventBus, weekStart, showWeekNum, weeklyEnabled, i18n, confirmCreateDailyNote } from '@/hooks/useSiYuan';
 import { CusNotebook } from '@/utils/notebook';
 import { refreshSql } from '@/api/utils';
 import { getEffectiveNow } from '@/utils/dayRollover';
@@ -196,17 +196,120 @@ function onDocumentClick(e: MouseEvent) {
 }
 
 onMounted(() => document.addEventListener('click', onDocumentClick));
-onBeforeUnmount(() => document.removeEventListener('click', onDocumentClick));
+onBeforeUnmount(() => {
+  document.removeEventListener('click', onDocumentClick);
+  clearRefreshRetryTimers();
+});
 
 // 已存在日记的日期
-const existDailyNotesMap = ref(new Map());
+const existDailyNotesMap = ref(new Map<string, string>());
 // 已存在周记映射（key: weekKey -> docId）
 const existWeeklyNotesMap = ref(new Map<string, string>());
 let weeklyFetchToken = 0;
+let dailyFetchToken = 0;
 // 防止重复点击导致二次打开/创建
 const processingDates = new Set<string>();
 // 选中的日期
 const selectedDate = ref<string | null>(null);
+/**
+ * Doc ids recently removed via ws removeDoc.
+ * SiYuan indexes SQL asynchronously after removeDoc is pushed, so a follow-up
+ * query can still return deleted docs for a short window. We filter them out
+ * until the tombstone expires.
+ */
+const recentlyRemovedDocIds = new Map<string, number>();
+const REMOVED_DOC_TTL_MS = 20_000;
+let refreshRetryTimers: ReturnType<typeof setTimeout>[] = [];
+
+function markDocsRemoved(ids: string[]) {
+  const expireAt = Date.now() + REMOVED_DOC_TTL_MS;
+  const now = Date.now();
+  for (const [id, exp] of recentlyRemovedDocIds) {
+    if (exp <= now) recentlyRemovedDocIds.delete(id);
+  }
+  for (const id of ids) {
+    if (id) recentlyRemovedDocIds.set(String(id), expireAt);
+  }
+}
+
+function isRecentlyRemoved(id: string): boolean {
+  const exp = recentlyRemovedDocIds.get(id);
+  if (exp == null) return false;
+  if (exp <= Date.now()) {
+    recentlyRemovedDocIds.delete(id);
+    return false;
+  }
+  return true;
+}
+
+/** Drop map entries whose doc id was deleted (forces Vue update via reassignment). */
+function removeDocsFromMaps(ids: string[]) {
+  if (!ids.length) return;
+  const idSet = new Set(ids.map(String));
+
+  let dailyChanged = false;
+  const nextDaily = new Map(existDailyNotesMap.value);
+  for (const [dateStr, docId] of nextDaily) {
+    if (idSet.has(String(docId))) {
+      nextDaily.delete(dateStr);
+      dailyChanged = true;
+    }
+  }
+  if (dailyChanged) {
+    existDailyNotesMap.value = nextDaily;
+  }
+
+  let weeklyChanged = false;
+  const nextWeekly = new Map(existWeeklyNotesMap.value);
+  for (const [key, docId] of nextWeekly) {
+    if (idSet.has(String(docId))) {
+      nextWeekly.delete(key);
+      weeklyChanged = true;
+    }
+  }
+  if (weeklyChanged) {
+    existWeeklyNotesMap.value = nextWeekly;
+  }
+}
+
+function extractRemoveDocIds(detail: any): string[] {
+  const data = detail?.data ?? detail;
+  const raw = data?.ids ?? data?.id ?? detail?.ids;
+  if (Array.isArray(raw)) {
+    return raw.map(String).filter(Boolean);
+  }
+  if (raw != null && raw !== '') {
+    return [String(raw)];
+  }
+  return [];
+}
+
+function clearRefreshRetryTimers() {
+  for (const t of refreshRetryTimers) clearTimeout(t);
+  refreshRetryTimers = [];
+}
+
+/** Refresh after mutation; retry because SQL index lags behind removeDoc push. */
+function scheduleRefreshAfterMutation() {
+  clearRefreshRetryTimers();
+  const delays = [0, 400, 1200];
+  for (const delay of delays) {
+    const timer = setTimeout(() => {
+      refreshExistDatesSilent();
+    }, delay);
+    refreshRetryTimers.push(timer);
+  }
+}
+
+async function refreshExistDatesSilent() {
+  try {
+    await refreshSql();
+  } catch (e) {
+    // ignore
+  }
+  await getExistDate(thisPanelDate.value);
+  await loadExistWeeklyNotes();
+}
 
 function getWeekKey(week: { weekNum: number; days: dayjs.Dayjs[] }): string {
   const startDate = week.days[0];
@@ -338,14 +441,8 @@ async function refreshExistDates() {
     // ignore pushMsg errors
   }
 
-  try {
-    await refreshSql();
-  } catch (e) {
-    // ignore refreshSql errors, still attempt to reload
-  }
-
-  await getExistDate(thisPanelDate.value);
-  await loadExistWeeklyNotes();
+  // Manual refresh also re-queries with tombstone filtering.
+  await refreshExistDatesSilent();
 }
 
 /**
@@ -456,13 +553,14 @@ async function openDailyNote(date: Date) {
   processingDates.add(dateStr);
 
   try {
-    // 显示确认对话框
-    const promptMsg = `${dateStr} ${i18n.value.msg.confirmCreateDailyNote}`;
-    const ok = await confirmDialogRef.value.showConfirm(promptMsg);
-
-    if (!ok) {
-      processingDates.delete(dateStr);
-      return;
+    // Optional confirmation before creating a missing daily note
+    if (confirmCreateDailyNote.value) {
+      const promptMsg = `${dateStr} ${i18n.value.msg.confirmCreateDailyNote}`;
+      const ok = await confirmDialogRef.value.showConfirm(promptMsg);
+      if (!ok) {
+        processingDates.delete(dateStr);
+        return;
+      }
     }
 
     // Ensure monthly/yearly notes exist first (if enabled)
@@ -550,18 +648,25 @@ async function changeMonth(date: Date) {
  * 获取当月已存在的日报日期
  */
 async function getExistDate(date: Date) {
+  const token = ++dailyFetchToken;
   if (!notebook.value) {
+    existDailyNotesMap.value = new Map();
     return;
   }
   const existDailyNotes = await notebook.value.getExistDailyNote(date);
-  if (!existDailyNotes) {
-    return;
+  // Drop stale in-flight responses
+  if (token !== dailyFetchToken) return;
+
+  // Always rebuild from a clean map so deletions are reflected.
+  const next = new Map<string, string>();
+  if (existDailyNotes?.length) {
+    for (const { id, dateStr } of existDailyNotes) {
+      // Skip docs we know were just deleted (SQL index may still list them).
+      if (id && isRecentlyRemoved(String(id))) continue;
+      if (id && dateStr) next.set(dateStr, id);
+    }
   }
-  // clear previous map first to reflect latest state
-  existDailyNotesMap.value.clear();
-  for (const { id, dateStr } of existDailyNotes) {
-    existDailyNotesMap.value.set(dateStr, id);
-  }
+  existDailyNotesMap.value = next;
 }
 
 // ===== 侦听器 =====
@@ -588,11 +693,19 @@ eventBus.value?.on('ws-main', async ({ detail }) => {
   if (!notebook.value) {
     return;
   }
-  const { cmd } = detail;
-  if (['removeDoc', 'createdailynote', 'createDoc'].includes(cmd)) {
-    await refreshSql();
-    await getExistDate(thisPanelDate.value);
-    await loadExistWeeklyNotes();
+  const { cmd } = detail || {};
+  if (cmd === 'removeDoc') {
+    // Optimistic UI: removeDoc is pushed before SQL index is updated.
+    const ids = extractRemoveDocIds(detail);
+    if (ids.length) {
+      markDocsRemoved(ids);
+      removeDocsFromMaps(ids);
+    }
+    scheduleRefreshAfterMutation();
+    return;
+  }
+  if (['createdailynote', 'createDoc', 'create'].includes(cmd)) {
+    scheduleRefreshAfterMutation();
   }
 });
 

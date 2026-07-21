@@ -43,6 +43,10 @@
     "hourLabel": "Hora",
     "minuteLabel": "Minuto"
   },
+  "confirmCreateDailyNote": {
+    "title": "Confirmar antes de criar a nota diária",
+    "hint": "Quando ativado, clicar numa data sem nota diária mostra um diálogo de confirmação. Desative para criar de imediato."
+  },
   "weekly": {
     "enable": "Ativar notas semanais",
     "pathLabel": "Caminho das notas semanais",

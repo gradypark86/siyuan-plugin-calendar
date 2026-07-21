@@ -43,6 +43,10 @@
     "hourLabel": "Giờ",
     "minuteLabel": "Phút"
   },
+  "confirmCreateDailyNote": {
+    "title": "Xác nhận trước khi tạo nhật ký",
+    "hint": "Khi bật, nhấp vào ngày chưa có nhật ký sẽ hiện hộp thoại xác nhận. Tắt để tạo ngay."
+  },
   "weekly": {
     "enable": "Bật ghi chú tuần",
     "pathLabel": "Đường dẫn ghi chú tuần",

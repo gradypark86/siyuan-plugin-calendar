@@ -43,6 +43,10 @@
     "hourLabel": "Jam",
     "minuteLabel": "Menit"
   },
+  "confirmCreateDailyNote": {
+    "title": "Konfirmasi sebelum membuat catatan harian",
+    "hint": "Jika diaktifkan, mengklik tanggal tanpa catatan harian menampilkan dialog konfirmasi. Matikan untuk membuat langsung."
+  },
   "weekly": {
     "enable": "Aktifkan catatan mingguan",
     "pathLabel": "Jalur catatan mingguan",

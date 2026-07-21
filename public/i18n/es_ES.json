@@ -11,11 +11,9 @@
     "failedToCreateWeeklyNote": "Error al abrir/crear la nota semanal",
     "confirm": "Confirmar",
     "cancel": "Cancelar",
-    "pleaseConfirm": "Por favor confirma"
-    ,
+    "pleaseConfirm": "Por favor confirma",
     "createdDailyNote": "Nota diaria creada",
-    "createDailyNoteFailed": "Error al crear la nota diaria"
-    ,
+    "createDailyNoteFailed": "Error al crear la nota diaria",
     "createdWeeklyNote": "Nota semanal creada",
     "createWeeklyNoteFailed": "Error al crear la nota semanal",
     "periodicPathAutoDisabled": "Se detectaron rutas de almacenamiento vacías y se desactivaron automáticamente los interruptores relacionados: {items}"
@@ -25,15 +23,13 @@
     "topLeft": "Arriba izquierda",
     "topRight": "Arriba derecha",
     "dock": "muelle"
-  }
-
-  ,"weekStart": {
+  },
+  "weekStart": {
     "title": "La semana comienza el",
     "sunday": "Domingo",
     "monday": "Lunes"
-  }
-
-  ,"showWeekNum": {
+  },
+  "showWeekNum": {
     "title": "Mostrar número de semana"
   },
   "settingsTabs": {
@@ -46,8 +42,12 @@
     "hint": "Antes de esta hora, «hoy» se sigue tratando como el día anterior. Por ejemplo, con 02:30, al pulsar Hoy antes de las 2:30 se abre/crea la nota del día anterior. Hora 0–23, minuto 0–59.",
     "hourLabel": "Hora",
     "minuteLabel": "Minuto"
-  }
-  ,"weekly": {
+  },
+  "confirmCreateDailyNote": {
+    "title": "Confirmar antes de crear la nota diaria",
+    "hint": "Si está activado, al pulsar una fecha sin nota diaria se muestra un diálogo de confirmación. Desactívelo para crear de inmediato."
+  },
+  "weekly": {
     "enable": "Habilitar notas semanales",
     "pathLabel": "Ruta de notas semanales",
     "templateLabel": "Ruta de plantilla semanal",

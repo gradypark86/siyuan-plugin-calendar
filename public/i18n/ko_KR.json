@@ -43,6 +43,10 @@
     "hourLabel": "시",
     "minuteLabel": "분"
   },
+  "confirmCreateDailyNote": {
+    "title": "일기 생성 전 확인",
+    "hint": "켜면 일기가 없는 날짜를 클릭할 때 확인 대화상자를 표시합니다. 끄면 바로 생성합니다."
+  },
   "weekly": {
     "enable": "주간 노트 사용",
     "pathLabel": "주간 노트 저장 경로",

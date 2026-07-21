@@ -43,16 +43,16 @@ export class CusNotebook implements Notebook, NotebookConf {
     return api.sql(`SELECT * FROM blocks WHERE type='d' AND box = '${this.id}' AND ${condition}`);
   }
 
-  async getExistDailyNote(date: Date): Promise<DailyNote[] | undefined> {
+  async getExistDailyNote(date: Date): Promise<DailyNote[]> {
     const month = dayjs(date).format('YYYYMM');
     const condition = `id IN (SELECT block_id FROM attributes AS a WHERE a.name like 'custom-dailynote-${month}__') `;
     const dailyNotes = await this.searchDailyNote(condition);
-    if (!dailyNotes.length) {
-      return;
+    const result: DailyNote[] = [];
+    if (!dailyNotes?.length) {
+      return result;
     }
-    const result = [];
     for (const { id, ial } of dailyNotes) {
-      const match = ial?.match(/custom-dailynote-(\d{8})/);      
+      const match = ial?.match(/custom-dailynote-(\d{8})/);
       if (match) {
         const dateStr = dayjs(match[1]).format('YYYY-MM-DD');
         result.push({ id, dateStr });

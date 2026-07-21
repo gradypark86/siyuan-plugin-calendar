@@ -11,11 +11,9 @@
     "failedToCreateWeeklyNote": "Échec de l'ouverture/création de la note hebdomadaire",
     "confirm": "Confirmer",
     "cancel": "Annuler",
-    "pleaseConfirm": "S'il vous plaît confirmer"
-    ,
+    "pleaseConfirm": "S'il vous plaît confirmer",
     "createdDailyNote": "Journal créé",
-    "createDailyNoteFailed": "Échec de la création du journal"
-    ,
+    "createDailyNoteFailed": "Échec de la création du journal",
     "createdWeeklyNote": "Note hebdomadaire créée",
     "createWeeklyNoteFailed": "Échec de la création de la note hebdomadaire",
     "periodicPathAutoDisabled": "Des chemins de stockage vides ont été détectés et les interrupteurs correspondants ont été désactivés automatiquement : {items}"
@@ -25,15 +23,13 @@
     "topLeft": "En haut à gauche",
     "topRight": "En haut à droite",
     "dock": "Dock"
-  }
-
-  ,"weekStart": {
+  },
+  "weekStart": {
     "title": "La semaine commence le",
     "sunday": "Dimanche",
     "monday": "Lundi"
-  }
-
-  ,"showWeekNum": {
+  },
+  "showWeekNum": {
     "title": "Afficher le numéro de semaine"
   },
   "settingsTabs": {
@@ -46,8 +42,12 @@
     "hint": "Avant cette heure, « aujourd'hui » est encore traité comme la veille. Par exemple, avec 02:30, cliquer sur Aujourd'hui avant 2 h 30 ouvre/crée la note de la veille. Heure 0–23, minute 0–59.",
     "hourLabel": "Heure",
     "minuteLabel": "Minute"
-  }
-  ,"weekly": {
+  },
+  "confirmCreateDailyNote": {
+    "title": "Confirmer avant de créer la note quotidienne",
+    "hint": "Si activé, cliquer sur une date sans note quotidienne affiche une confirmation. Désactivez pour créer immédiatement."
+  },
+  "weekly": {
     "enable": "Activer les notes hebdomadaires",
     "pathLabel": "Chemin des notes hebdomadaires",
     "templateLabel": "Chemin du modèle hebdomadaire",

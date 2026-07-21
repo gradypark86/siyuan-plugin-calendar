@@ -25,3 +25,8 @@ export const yearlyTemplatePath = ref<string>('');
 export const dayRolloverHour = ref<number>(0);
 /** Minute (0-59) paired with dayRolloverHour. Default 0. */
 export const dayRolloverMinute = ref<number>(0);
+/**
+ * When true, ask for confirmation before creating a missing daily note.
+ * Default true (opt-out): stays on until the user turns it off in Advanced settings.
+ */
+export const confirmCreateDailyNote = ref<boolean>(true);

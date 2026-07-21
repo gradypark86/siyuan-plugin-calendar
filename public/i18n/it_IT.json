@@ -43,6 +43,10 @@
     "hourLabel": "Ora",
     "minuteLabel": "Minuto"
   },
+  "confirmCreateDailyNote": {
+    "title": "Conferma prima di creare la nota giornaliera",
+    "hint": "Se abilitato, facendo clic su una data senza nota giornaliera viene chiesta conferma. Disattiva per creare subito."
+  },
   "weekly": {
     "enable": "Abilita note settimanali",
     "pathLabel": "Percorso note settimanali",

@@ -43,6 +43,10 @@
     "hourLabel": "Stunde",
     "minuteLabel": "Minute"
   },
+  "confirmCreateDailyNote": {
+    "title": "Vor dem Erstellen der Tagesnotiz bestätigen",
+    "hint": "Wenn aktiviert, erscheint vor dem Erstellen einer fehlenden Tagesnotiz ein Bestätigungsdialog. Deaktivieren zum sofortigen Erstellen."
+  },
   "weekly": {
     "enable": "Wochennotizen aktivieren",
     "pathLabel": "Pfad für Wochennotizen",

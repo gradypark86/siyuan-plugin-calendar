@@ -43,6 +43,10 @@
     "hourLabel": "時",
     "minuteLabel": "分"
   },
+  "confirmCreateDailyNote": {
+    "title": "日記作成前に確認する",
+    "hint": "オンにすると、日記のない日付をクリックしたときに確認ダイアログを表示します。オフにすると即座に作成します。"
+  },
   "weekly": {
     "enable": "週次ノートを有効化",
     "pathLabel": "週次ノートの保存パス",
