@@ -2,6 +2,7 @@ import dayjs from 'dayjs';
 import * as api from '@/api/api';
 import { setCustomDNAttr } from '@/api/daily-note';
 import {
+  weeklyEnabled,
   weeklyPath,
   weeklyTemplatePath,
   monthlyEnabled,
@@ -10,7 +11,9 @@ import {
   yearlyEnabled,
   yearlyPath,
   yearlyTemplatePath,
+  weekStart,
 } from '@/hooks/useSiYuan';
+import { getCalendarWeekNum } from '@/utils/weekNum';
 
 export class CusNotebook implements Notebook, NotebookConf {
   constructor(
@@ -262,14 +265,25 @@ export class CusNotebook implements Notebook, NotebookConf {
     return docID;
   }
 
-  async ensurePeriodNotes(date: Date): Promise<void> {
-    // Create yearly note first so its path can safely be a parent of monthly path
+  async ensurePeriodNotes(date: Date, weekNum?: number): Promise<void> {
+    // Create yearly/monthly first so their paths can safely be parents of daily paths
     // (e.g. yearly: /daily note/{{now | date "2006"}}, monthly: /daily note/{{now | date "2006/01"}}/...)
     if (yearlyEnabled.value) {
       await this.createYearlyNote(date);
     }
     if (monthlyEnabled.value) {
       await this.createMonthlyNote(date);
+    }
+    // Weekly may sit on an ancestor of the daily path. Creating a daily note can
+    // auto-create that parent as an empty shell without the weekly template.
+    // Ensure weekly here (create or backfill template if empty) so path overlap
+    // does not permanently skip weekly template rendering.
+    if (weeklyEnabled.value && String(weeklyPath.value || '').trim()) {
+      const num =
+        weekNum != null && Number.isFinite(Number(weekNum))
+          ? Number(weekNum)
+          : getCalendarWeekNum(date, Number(weekStart.value));
+      await this.createWeeklyNote(date, num);
     }
   }
 }

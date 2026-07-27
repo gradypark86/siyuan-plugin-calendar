@@ -97,6 +97,7 @@ import { eventBus, weekStart, showWeekNum, weeklyEnabled, i18n, confirmCreateDai
 import { CusNotebook } from '@/utils/notebook';
 import { refreshSql } from '@/api/utils';
 import { getEffectiveNow } from '@/utils/dayRollover';
+import { getCalendarWeekNum } from '@/utils/weekNum';
 import ConfirmDialog from './ConfirmDialog.vue';
 
 const { locale, localeType } = useLocale();
@@ -380,13 +381,8 @@ const monthWeeks = computed(() => {
       currentDate = currentDate.add(1, 'day');
     }
 
-    // 计算 ISO 周号（简单方法）
-    // 获取该周中最后一天（通常是周日）
-    const weekEndDay = weekDays[6];
-    // 简单计算：距离年初的天数 / 7，加 1
-    const yearStart = weekEndDay.clone().startOf('year');
-    const dayOfYear = weekEndDay.diff(yearStart, 'day') + 1;
-    const isoWeekNum = Math.ceil(dayOfYear / 7);
+    // Same week-number algorithm as getCalendarWeekNum (week end day of this row).
+    const isoWeekNum = getCalendarWeekNum(weekDays[6], startDay);
 
     weeks.push({
       weekNum: isoWeekNum,
@@ -446,24 +442,31 @@ async function refreshExistDates() {
 }
 
 /**
- * Ensure monthly/yearly notes exist before creating daily/weekly notes.
- * Creation is controlled by plugin settings toggles.
+ * Ensure yearly/monthly/weekly notes exist before creating daily notes.
+ * Weekly is included so path-overlap parents get template backfill.
  */
-async function ensurePeriodNotes(date: Date) {
+async function ensurePeriodNotes(date: Date, weekNum?: number) {
   if (!notebook.value) return;
 
   const nb: any = notebook.value as any;
   try {
     if (typeof nb.ensurePeriodNotes === 'function') {
-      await nb.ensurePeriodNotes(date);
+      await nb.ensurePeriodNotes(date, weekNum);
       return;
     }
 
+    if (typeof nb.createYearlyNote === 'function') {
+      await nb.createYearlyNote(date);
+    }
     if (typeof nb.createMonthlyNote === 'function') {
       await nb.createMonthlyNote(date);
     }
-    if (typeof nb.createYearlyNote === 'function') {
-      await nb.createYearlyNote(date);
+    if (
+      weeklyEnabled.value &&
+      typeof nb.createWeeklyNote === 'function' &&
+      weekNum != null
+    ) {
+      await nb.createWeeklyNote(date, weekNum);
     }
   } catch (e) {
     console.error('[calendar] ensurePeriodNotes error', e);
@@ -563,8 +566,10 @@ async function openDailyNote(date: Date) {
       }
     }
 
-    // Ensure monthly/yearly notes exist first (if enabled)
-    await ensurePeriodNotes(d.toDate());
+    // Ensure yearly/monthly/weekly notes exist first (if enabled).
+    // Pass weekNum so weekly path-overlap parents can get template backfill.
+    const weekNumForDay = getCalendarWeekNum(d, Number(weekStart.value));
+    await ensurePeriodNotes(d.toDate(), weekNumForDay);
 
     // 创建日报
     try {
@@ -590,6 +595,11 @@ async function openDailyNote(date: Date) {
 
 /**
  * 打开或创建周报（如果支持）
+ *
+ * Always go through createWeeklyNote (not getExist + open):
+ * when weekly path overlaps a daily ancestor, creating a daily note may
+ * auto-create an empty weekly shell without the weekly template. createWeeklyNote
+ * backfills the template only when the doc is still empty.
  */
 async function openWeeklyNote(week: { weekNum: number; days: dayjs.Dayjs[] }) {
   const repDay = week.days[Math.floor(week.days.length / 2)];
@@ -598,37 +608,38 @@ async function openWeeklyNote(week: { weekNum: number; days: dayjs.Dayjs[] }) {
     return;
   }
 
-  // 如果笔记本支持按周的检索/创建函数，优先使用它们
   const nb: any = notebook.value as any;
   try {
-    if (typeof nb.getExistWeeklyNote === 'function') {
-      const id = await nb.getExistWeeklyNote(repDay.toDate(), week.weekNum);
-      if (id) {
-        existWeeklyNotesMap.value.set(getWeekKey(week), id);
-        openDoc(id);
-        return;
-      }
+    if (typeof nb.createWeeklyNote !== 'function') {
+      await api.pushMsg(formatMsg('weeklyPathNotSet'), 4000);
+      return;
     }
 
-    if (typeof nb.createWeeklyNote === 'function') {
-      // Ensure monthly/yearly notes exist first (if enabled)
-      await ensurePeriodNotes(repDay.toDate());
+    // Yearly/monthly first if enabled (weekly is handled by createWeeklyNote itself).
+    await ensurePeriodNotes(repDay.toDate(), week.weekNum);
 
-      const id = await nb.createWeeklyNote(repDay.toDate(), week.weekNum);
-      if (id) {
-        existWeeklyNotesMap.value.set(getWeekKey(week), id);
-        openDoc(id);
-        try {
-          await api.pushMsg(formatMsg('createdWeeklyNote'), 2000);
-        } catch (e) {
-          // ignore notification errors
-        }
-        return;
-      }
+    const existedBefore =
+      typeof nb.getExistWeeklyNote === 'function'
+        ? Boolean(await nb.getExistWeeklyNote(repDay.toDate(), week.weekNum))
+        : false;
+
+    const id = await nb.createWeeklyNote(repDay.toDate(), week.weekNum);
+    if (!id) {
+      await api.pushErrMsg(formatMsg('failedToCreateWeeklyNote'));
+      return;
     }
 
-    // fallback: not supported yet
-    await api.pushMsg(formatMsg('weeklyPathNotSet'), 4000);
+    existWeeklyNotesMap.value.set(getWeekKey(week), id);
+    openDoc(id);
+
+    // Only toast "created" when the note did not already exist.
+    if (!existedBefore) {
+      try {
+        await api.pushMsg(formatMsg('createdWeeklyNote'), 2000);
+      } catch (e) {
+        // ignore notification errors
+      }
+    }
   } catch (e) {
     console.error('[calendar] openWeeklyNote error', e);
     await api.pushErrMsg(formatMsg('failedToCreateWeeklyNote'));
