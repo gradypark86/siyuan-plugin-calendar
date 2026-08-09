@@ -210,6 +210,8 @@ let weeklyFetchToken = 0;
 let dailyFetchToken = 0;
 // 防止重复点击导致二次打开/创建
 const processingDates = new Set<string>();
+// Prevent concurrent weekly-note creation from repeated clicks or overlapping flows.
+const processingWeeks = new Set<string>();
 // 选中的日期
 const selectedDate = ref<string | null>(null);
 /**
@@ -445,13 +447,13 @@ async function refreshExistDates() {
  * Ensure yearly/monthly/weekly notes exist before creating daily notes.
  * Weekly is included so path-overlap parents get template backfill.
  */
-async function ensurePeriodNotes(date: Date, weekNum?: number) {
+async function ensurePeriodNotes(date: Date, weekNum?: number, includeWeekly = true) {
   if (!notebook.value) return;
 
   const nb: any = notebook.value as any;
   try {
     if (typeof nb.ensurePeriodNotes === 'function') {
-      await nb.ensurePeriodNotes(date, weekNum);
+      await nb.ensurePeriodNotes(date, weekNum, includeWeekly);
       return;
     }
 
@@ -463,6 +465,7 @@ async function ensurePeriodNotes(date: Date, weekNum?: number) {
     }
     if (
       weeklyEnabled.value &&
+      includeWeekly &&
       typeof nb.createWeeklyNote === 'function' &&
       weekNum != null
     ) {
@@ -609,6 +612,12 @@ async function openWeeklyNote(week: { weekNum: number; days: dayjs.Dayjs[] }) {
   }
 
   const nb: any = notebook.value as any;
+  const weekKey = getWeekKey(week);
+  if (processingWeeks.has(weekKey)) {
+    return;
+  }
+  processingWeeks.add(weekKey);
+
   try {
     if (typeof nb.createWeeklyNote !== 'function') {
       await api.pushMsg(formatMsg('weeklyPathNotSet'), 4000);
@@ -616,7 +625,8 @@ async function openWeeklyNote(week: { weekNum: number; days: dayjs.Dayjs[] }) {
     }
 
     // Yearly/monthly first if enabled (weekly is handled by createWeeklyNote itself).
-    await ensurePeriodNotes(repDay.toDate(), week.weekNum);
+    // Yearly/monthly notes only; createWeeklyNote below is the single weekly creation call.
+    await ensurePeriodNotes(repDay.toDate(), week.weekNum, false);
 
     const existedBefore =
       typeof nb.getExistWeeklyNote === 'function'
@@ -629,7 +639,7 @@ async function openWeeklyNote(week: { weekNum: number; days: dayjs.Dayjs[] }) {
       return;
     }
 
-    existWeeklyNotesMap.value.set(getWeekKey(week), id);
+    existWeeklyNotesMap.value.set(weekKey, id);
     openDoc(id);
 
     // Only toast "created" when the note did not already exist.
@@ -643,6 +653,8 @@ async function openWeeklyNote(week: { weekNum: number; days: dayjs.Dayjs[] }) {
   } catch (e) {
     console.error('[calendar] openWeeklyNote error', e);
     await api.pushErrMsg(formatMsg('failedToCreateWeeklyNote'));
+  } finally {
+    processingWeeks.delete(weekKey);
   }
 }
 

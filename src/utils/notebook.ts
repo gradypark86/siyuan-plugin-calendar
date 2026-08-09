@@ -16,6 +16,8 @@ import {
 import { getCalendarWeekNum } from '@/utils/weekNum';
 
 export class CusNotebook implements Notebook, NotebookConf {
+  private weeklyCreationLocks = new Map<string, Promise<string>>();
+
   constructor(
     public id: NotebookId,
     public name: string,
@@ -194,7 +196,24 @@ export class CusNotebook implements Notebook, NotebookConf {
 
   async createWeeklyNote(date: Date, weekNum: number): Promise<string> {
     const hPath = await this.getWeeklySavePath(date, weekNum);
-    const existingId = await this.getExistWeeklyNote(date, weekNum);
+    const inFlight = this.weeklyCreationLocks.get(hPath);
+    if (inFlight) {
+      return inFlight;
+    }
+
+    const operation = this.createWeeklyNoteOnce(hPath);
+    this.weeklyCreationLocks.set(hPath, operation);
+    try {
+      return await operation;
+    } finally {
+      if (this.weeklyCreationLocks.get(hPath) === operation) {
+        this.weeklyCreationLocks.delete(hPath);
+      }
+    }
+  }
+
+  private async createWeeklyNoteOnce(hPath: string): Promise<string> {
+    const existingId = await this.getDocIdByHPath(hPath);
     if (existingId) {
       await this.applyTemplateIfDocEmpty(existingId, weeklyTemplatePath.value);
       return existingId;
@@ -265,7 +284,7 @@ export class CusNotebook implements Notebook, NotebookConf {
     return docID;
   }
 
-  async ensurePeriodNotes(date: Date, weekNum?: number): Promise<void> {
+  async ensurePeriodNotes(date: Date, weekNum?: number, includeWeekly = true): Promise<void> {
     // Create yearly/monthly first so their paths can safely be parents of daily paths
     // (e.g. yearly: /daily note/{{now | date "2006"}}, monthly: /daily note/{{now | date "2006/01"}}/...)
     if (yearlyEnabled.value) {
@@ -278,7 +297,7 @@ export class CusNotebook implements Notebook, NotebookConf {
     // auto-create that parent as an empty shell without the weekly template.
     // Ensure weekly here (create or backfill template if empty) so path overlap
     // does not permanently skip weekly template rendering.
-    if (weeklyEnabled.value && String(weeklyPath.value || '').trim()) {
+    if (includeWeekly && weeklyEnabled.value && String(weeklyPath.value || '').trim()) {
       const num =
         weekNum != null && Number.isFinite(Number(weekNum))
           ? Number(weekNum)
