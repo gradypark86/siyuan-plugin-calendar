@@ -34,12 +34,12 @@ export default class ArcoCalendarPlugin extends Plugin {
   private menuEle!: HTMLElement;
   private settingVueApp: VueApp | null = null;
 
-  onload() {
+  async onload() {
     i18n.value = this.i18n;
     app.value = this.app;
     eventBus.value = this.eventBus;
     isMobile.value = ['mobile', 'browser-mobile'].includes(getFrontend());
-    this.init();
+    await this.init();
   }
 
   onunload() {
@@ -319,6 +319,7 @@ export default class ArcoCalendarPlugin extends Plugin {
         size: { width: 300, height: 0 },
         icon: 'iconCalendar',
         title: _plugin.i18n.tabName,
+        show: true,
       },
       data: {},
       type: 'dock_tab',

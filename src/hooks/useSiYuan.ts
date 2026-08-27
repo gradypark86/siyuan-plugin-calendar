@@ -1,13 +1,14 @@
-import { ref } from 'vue';
+import { ref, shallowRef } from 'vue';
 import type { App, I18N, EventBus } from 'siyuan';
 
-export const app = ref<App>({ plugins: [], appId: '' });
+// SiYuan runtime instances use private methods and cannot be wrapped by Vue proxies.
+export const app = shallowRef<App>({ plugins: [], appId: '' });
 
 export const i18n = ref<I18N>({});
 
 export const isMobile = ref<boolean>(false);
 
-export const eventBus = ref<EventBus>();
+export const eventBus = shallowRef<EventBus>();
 
 export const position = ref();
 export const weekStart = ref<number>(1);
