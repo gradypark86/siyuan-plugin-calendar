@@ -59,6 +59,7 @@
     "title": "Tự động tạo ghi chú hàng tuần",
     "hint": "Khi tạo ghi chú hằng ngày, tự động tạo ghi chú của tuần hiện tại nếu chưa tồn tại."
   },
+  "autoCreateWeekly": { "forcedHint": "Bắt buộc vì đường dẫn ghi chú tuần chứa đường dẫn ghi chú ngày." },
   "monthly": {
     "enable": "Bật ghi chú tháng",
     "pathLabel": "Đường dẫn ghi chú tháng",

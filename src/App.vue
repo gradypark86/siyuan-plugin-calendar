@@ -167,6 +167,12 @@ watch(selectNotebookId, async bookId => {
   }
 });
 
+watch(selectNotebook, async notebook => {
+  if (notebook) {
+    await notebook.refreshWeeklyPathOverlap(new Date());
+  }
+});
+
 // weekStart is managed by plugin settings; no local storage writes here.
 
 onBeforeUnmount(() => {

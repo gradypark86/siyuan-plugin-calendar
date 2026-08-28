@@ -59,6 +59,7 @@
     "title": "Crear nota semanal automáticamente",
     "hint": "Al crear una nota diaria, crea la nota semanal actual si no existe."
   },
+  "autoCreateWeekly": { "forcedHint": "Se requiere porque la ruta de la nota semanal contiene la ruta de la nota diaria." },
   "monthly": {
     "enable": "Habilitar notas mensuales",
     "pathLabel": "Ruta de notas mensuales",

@@ -59,6 +59,7 @@
     "title": "Wochennotiz automatisch erstellen",
     "hint": "Beim Erstellen einer Tagesnotiz wird die Wochennotiz der aktuellen Woche erstellt, wenn sie noch nicht vorhanden ist."
   },
+  "autoCreateWeekly": { "forcedHint": "Erforderlich, da der Pfad der Wochennotiz den Pfad der Tagesnotiz enthält." },
   "monthly": {
     "enable": "Monatsnotizen aktivieren",
     "pathLabel": "Pfad für Monatsnotizen",

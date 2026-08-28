@@ -11,6 +11,7 @@ import {
   showWeekNum,
   weeklyEnabled,
   autoCreateWeekly,
+  autoCreateWeeklyForced,
   weeklyPath,
   weeklyTemplatePath,
   monthlyEnabled,
@@ -78,6 +79,7 @@ export default class ArcoCalendarPlugin extends Plugin {
       showWeekNum.value = false;
       weeklyEnabled.value = false;
       autoCreateWeekly.value = false;
+      autoCreateWeeklyForced.value = false;
       weeklyPath.value = '';
       weeklyTemplatePath.value = '';
       monthlyEnabled.value = false;

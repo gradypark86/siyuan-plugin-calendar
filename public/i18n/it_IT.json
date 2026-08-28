@@ -59,6 +59,7 @@
     "title": "Crea automaticamente la nota settimanale",
     "hint": "Quando crei una nota giornaliera, crea la nota della settimana corrente se non esiste."
   },
+  "autoCreateWeekly": { "forcedHint": "Obbligatorio perché il percorso della nota settimanale contiene quello della nota giornaliera." },
   "monthly": {
     "enable": "Abilita note mensili",
     "pathLabel": "Percorso note mensili",

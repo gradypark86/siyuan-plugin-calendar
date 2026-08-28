@@ -88,6 +88,9 @@
             <div class="b3-label__text">
               {{ t.autoCreateWeekly?.hint || 'When creating a daily note, create the current weekly note if it does not exist.' }}
             </div>
+            <div v-if="autoCreateWeeklyForced" class="b3-label__text auto-create-weekly-forced">
+              {{ t.autoCreateWeekly?.forcedHint || 'Forced on because the weekly note path contains the daily note path.' }}
+            </div>
           </div>
           <span class="fn__space"></span>
           <div class="setting-control">
@@ -161,7 +164,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { i18n } from '@/hooks/useSiYuan';
+import { i18n, autoCreateWeeklyForced } from '@/hooks/useSiYuan';
 import SySelect from './SySelect.vue';
 import WeekStartSelect from './WeekStartSelect.vue';
 import ShowWeekNumToggle from './ShowWeekNumToggle.vue';

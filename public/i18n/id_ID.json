@@ -59,6 +59,7 @@
     "title": "Buat catatan mingguan otomatis",
     "hint": "Saat membuat catatan harian, buat catatan minggu ini jika belum ada."
   },
+  "autoCreateWeekly": { "forcedHint": "Diperlukan karena jalur catatan mingguan mencakup jalur catatan harian." },
   "monthly": {
     "enable": "Aktifkan catatan bulanan",
     "pathLabel": "Jalur catatan bulanan",

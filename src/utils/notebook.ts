@@ -12,6 +12,8 @@ import {
   yearlyPath,
   yearlyTemplatePath,
   weekStart,
+  autoCreateWeekly,
+  autoCreateWeeklyForced,
 } from '@/hooks/useSiYuan';
 import { getCalendarWeekNum } from '@/utils/weekNum';
 
@@ -248,6 +250,28 @@ export class CusNotebook implements Notebook, NotebookConf {
     }
   }
 
+  private async hasWeeklyPathOverlap(date: Date, weekNum: number): Promise<boolean> {
+    if (!weeklyEnabled.value || !String(weeklyPath.value || '').trim()) return false;
+    try {
+      const [dailyPath, weeklyNotePath] = await Promise.all([this.getSavePath(date), this.getWeeklySavePath(date, weekNum)]);
+      const normalize = (value: string) => `/${String(value || '').replace(/\\/g, '/').replace(/^\/+|\/+$/g, '')}`;
+      const daily = normalize(dailyPath);
+      const weekly = normalize(weeklyNotePath);
+      return daily === weekly || daily.startsWith(`${weekly}/`);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async refreshWeeklyPathOverlap(date: Date, weekNum?: number): Promise<boolean> {
+    const num = weekNum != null && Number.isFinite(Number(weekNum)) ? Number(weekNum) : getCalendarWeekNum(date, Number(weekStart.value));
+    autoCreateWeeklyForced.value = await this.hasWeeklyPathOverlap(date, num);
+    if (autoCreateWeeklyForced.value) {
+      autoCreateWeekly.value = true;
+    }
+    return autoCreateWeeklyForced.value;
+  }
+
   private async createWeeklyNoteOnce(hPath: string): Promise<string> {
     const existingId = await this.getDocIdByHPath(hPath);
     if (existingId) {
@@ -333,11 +357,9 @@ export class CusNotebook implements Notebook, NotebookConf {
     // auto-create that parent as an empty shell without the weekly template.
     // Ensure weekly here (create or backfill template if empty) so path overlap
     // does not permanently skip weekly template rendering.
-    if (includeWeekly && weeklyEnabled.value && String(weeklyPath.value || '').trim()) {
-      const num =
-        weekNum != null && Number.isFinite(Number(weekNum))
-          ? Number(weekNum)
-          : getCalendarWeekNum(date, Number(weekStart.value));
+    const num = weekNum != null && Number.isFinite(Number(weekNum)) ? Number(weekNum) : getCalendarWeekNum(date, Number(weekStart.value));
+    await this.refreshWeeklyPathOverlap(date, num);
+    if ((includeWeekly || autoCreateWeeklyForced.value) && weeklyEnabled.value && String(weeklyPath.value || '').trim()) {
       await this.createWeeklyNote(date, num);
     }
   }

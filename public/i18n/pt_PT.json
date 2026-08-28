@@ -59,6 +59,7 @@
     "title": "Criar nota semanal automaticamente",
     "hint": "Ao criar uma nota diária, cria a nota da semana atual se ela não existir."
   },
+  "autoCreateWeekly": { "forcedHint": "Obrigatório porque o caminho da nota semanal contém o caminho da nota diária." },
   "monthly": {
     "enable": "Ativar notas mensais",
     "pathLabel": "Caminho das notas mensais",

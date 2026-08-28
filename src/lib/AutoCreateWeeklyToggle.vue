@@ -4,14 +4,14 @@
       type="checkbox"
       class="b3-switch"
       v-model="autoCreateWeekly"
-      :disabled="!weeklyEnabled"
+      :disabled="!weeklyEnabled || autoCreateWeeklyForced"
       id="auto-create-weekly-checkbox"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { autoCreateWeekly, weeklyEnabled } from '@/hooks/useSiYuan';
+import { autoCreateWeekly, autoCreateWeeklyForced, weeklyEnabled } from '@/hooks/useSiYuan';
 </script>
 
 <style scoped>
