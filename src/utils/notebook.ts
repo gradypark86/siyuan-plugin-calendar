@@ -15,6 +15,34 @@ import {
 } from '@/hooks/useSiYuan';
 import { getCalendarWeekNum } from '@/utils/weekNum';
 
+function isPathInTemplatesDir(filePath: string, templatesDir: string): boolean {
+  const normalize = (value: string) => value.replace(/\\/g, '/').replace(/\/+$/, '');
+  const candidate = normalize(String(filePath || ''));
+  const root = normalize(templatesDir);
+  return candidate === root || candidate.startsWith(`${root}/`);
+}
+
+function getTemplateRelativePath(filePath: string): string | undefined {
+  const normalized = String(filePath || '').replace(/\\/g, '/');
+  const match = normalized.match(/(?:^|\/)templates\/(.+)$/i);
+  return match?.[1];
+}
+
+async function getTemplatesDir(): Promise<string> {
+  const system = await api.request('/api/system/getConf');
+  let dataDir = String(system?.conf?.system?.dataDir || '').replace(/[\\/]+$/, '');
+
+  // The web frontend deliberately omits dataDir from getConf. Derive it from
+  // the workspace path so the template API still receives an absolute path.
+  if (!dataDir) {
+    const workspace = await api.request('/api/system/getWorkspaceInfo');
+    const workspaceDir = String(workspace?.workspaceDir || '').replace(/[\\/]+$/, '');
+    dataDir = workspaceDir ? `${workspaceDir}/data` : '';
+  }
+
+  return dataDir ? `${dataDir}/templates` : '';
+}
+
 export class CusNotebook implements Notebook, NotebookConf {
   private weeklyCreationLocks = new Map<string, Promise<string>>();
 
@@ -31,10 +59,6 @@ export class CusNotebook implements Notebook, NotebookConf {
     dailyNoteSavePath = dailyNoteSavePath.replace(/\{\{(.*?)\}\}/g, match =>
       match.replace(/\bnow\b(?=(?:(?:[^"]*"){2})*[^"]*$)/g, `(toDate "2006-01-02" "[[dateSlot]]")`)
     );
-    if (dailyNoteTemplatePath) {
-      const system = await api.request('/api/system/getConf');
-      dailyNoteTemplatePath = system.conf.system.dataDir + '/templates' + dailyNoteTemplatePath;
-    }
     return new CusNotebook(id, name, dailyNoteSavePath, dailyNoteTemplatePath);
   }
 
@@ -112,17 +136,29 @@ export class CusNotebook implements Notebook, NotebookConf {
     let tplPath = (templatePath || '').trim();
     if (!tplPath) return '';
 
-    // Relative path => resolve under workspace/data/templates
-    if (!tplPath.includes(':') && !tplPath.startsWith('\\\\')) {
-      const system = await api.request('/api/system/getConf');
-      const dataDir = system?.conf?.system?.dataDir;
-      if (!dataDir) return '';
-      if (!tplPath.startsWith('/') && !tplPath.startsWith('\\')) {
-        tplPath = '/' + tplPath;
+    const templatesDir = await getTemplatesDir();
+    if (!templatesDir) return '';
+
+    // Keep absolute paths (including Android paths) that are already inside
+    // the workspace templates directory. A leading slash alone is not enough:
+    // SiYuan also uses "/foo.md" for a path relative to data/templates.
+    if (isPathInTemplatesDir(tplPath, templatesDir) || /^[A-Za-z]:[\\/]/.test(tplPath) || tplPath.startsWith('\\\\')) {
+      const relativePath = getTemplateRelativePath(tplPath);
+      if (relativePath && !isPathInTemplatesDir(tplPath, templatesDir)) {
+        return `${templatesDir}/${relativePath}`;
       }
-      tplPath = dataDir + '/templates' + tplPath;
+      return tplPath;
     }
-    return tplPath;
+
+    const relativePath = getTemplateRelativePath(tplPath);
+    if (relativePath) {
+      return `${templatesDir}/${relativePath}`;
+    }
+
+    if (!tplPath.startsWith('/') && !tplPath.startsWith('\\')) {
+      tplPath = '/' + tplPath;
+    }
+    return templatesDir + tplPath;
   }
 
   private async applyTemplate(docID: string, templatePath: string): Promise<void> {
