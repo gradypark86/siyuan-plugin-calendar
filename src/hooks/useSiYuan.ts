@@ -14,6 +14,7 @@ export const position = ref();
 export const weekStart = ref<number>(1);
 export const showWeekNum = ref<boolean>(false);
 export const weeklyEnabled = ref<boolean>(false);
+export const autoCreateWeekly = ref<boolean>(false);
 export const weeklyPath = ref<string>('');
 export const weeklyTemplatePath = ref<string>('');
 export const monthlyEnabled = ref<boolean>(false);

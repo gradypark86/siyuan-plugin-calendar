@@ -55,6 +55,10 @@
     "templateHint": "z. B. weekly-template.md — diese Datei unter workspace/data/templates/ ablegen. Leer lassen, um keine Vorlage anzuwenden.",
     "pathRequired": "Der Pfad für Wochennotizen ist erforderlich."
   },
+  "autoCreateWeekly": {
+    "title": "Wochennotiz automatisch erstellen",
+    "hint": "Beim Erstellen einer Tagesnotiz wird die Wochennotiz der aktuellen Woche erstellt, wenn sie noch nicht vorhanden ist."
+  },
   "monthly": {
     "enable": "Monatsnotizen aktivieren",
     "pathLabel": "Pfad für Monatsnotizen",

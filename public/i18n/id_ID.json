@@ -55,6 +55,10 @@
     "templateHint": "mis. weekly-template.md — letakkan file ini di workspace/data/templates/. Biarkan kosong untuk melewatkan render templat.",
     "pathRequired": "Jalur catatan mingguan wajib diisi."
   },
+  "autoCreateWeekly": {
+    "title": "Buat catatan mingguan otomatis",
+    "hint": "Saat membuat catatan harian, buat catatan minggu ini jika belum ada."
+  },
   "monthly": {
     "enable": "Aktifkan catatan bulanan",
     "pathLabel": "Jalur catatan bulanan",

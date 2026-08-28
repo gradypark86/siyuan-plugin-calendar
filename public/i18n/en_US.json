@@ -55,6 +55,10 @@
     "templateHint": "e.g. weekly-template.md — place this file under workspace/data/templates/. Leave empty to skip template rendering.",
     "pathRequired": "Weekly notes path is required."
   },
+  "autoCreateWeekly": {
+    "title": "Automatically create weekly note",
+    "hint": "When creating a daily note, create the current weekly note if it does not exist."
+  },
   "monthly": {
     "enable": "Enable monthly notes",
     "pathLabel": "Monthly notes path",

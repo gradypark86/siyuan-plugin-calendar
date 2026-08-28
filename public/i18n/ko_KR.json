@@ -55,6 +55,10 @@
     "templateHint": "예: weekly-template.md — 이 파일을 workspace/data/templates/ 아래에 두세요. 비워 두면 템플릿을 적용하지 않습니다.",
     "pathRequired": "주간 노트 저장 경로는 필수입니다."
   },
+  "autoCreateWeekly": {
+    "title": "주간 노트 자동 생성",
+    "hint": "일일 노트를 만들 때 현재 주의 주간 노트가 없으면 자동으로 생성합니다."
+  },
   "monthly": {
     "enable": "월간 노트 사용",
     "pathLabel": "월간 노트 저장 경로",

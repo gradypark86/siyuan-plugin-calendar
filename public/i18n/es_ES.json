@@ -55,6 +55,10 @@
     "templateHint": "p. ej. weekly-template.md — coloque este archivo en workspace/data/templates/. Dejar vacío para omitir la renderización.",
     "pathRequired": "La ruta de notas semanales es obligatoria."
   },
+  "autoCreateWeekly": {
+    "title": "Crear nota semanal automáticamente",
+    "hint": "Al crear una nota diaria, crea la nota semanal actual si no existe."
+  },
   "monthly": {
     "enable": "Habilitar notas mensuales",
     "pathLabel": "Ruta de notas mensuales",

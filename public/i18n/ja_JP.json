@@ -55,6 +55,10 @@
     "templateHint": "例: weekly-template.md — このファイルを workspace/data/templates/ に置いてください。空欄の場合はテンプレートを適用しません。",
     "pathRequired": "週次ノートの保存パスは必須です。"
   },
+  "autoCreateWeekly": {
+    "title": "週記を自動作成",
+    "hint": "日記を作成するとき、当週の週記が存在しない場合は自動的に作成します。"
+  },
   "monthly": {
     "enable": "月次ノートを有効化",
     "pathLabel": "月次ノートの保存パス",

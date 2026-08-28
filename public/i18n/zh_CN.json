@@ -55,6 +55,10 @@
     "templateHint": "例如 weekly-template.md，需要将该文件放置于工作空间/data/templates/ 下。留空则不渲染模板。",
     "pathRequired": "周记存放路径不能为空"
   },
+  "autoCreateWeekly": {
+    "title": "自动创建周记",
+    "hint": "新建日记时，若当周周记不存在，则自动创建当前周的周记。"
+  },
   "monthly": {
     "enable": "月记开关",
     "pathLabel": "月记存放路径",

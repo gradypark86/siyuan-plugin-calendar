@@ -55,6 +55,10 @@
     "templateHint": "ví dụ weekly-template.md — đặt file này trong workspace/data/templates/. Để trống để bỏ qua mẫu.",
     "pathRequired": "Đường dẫn ghi chú tuần là bắt buộc."
   },
+  "autoCreateWeekly": {
+    "title": "Tự động tạo ghi chú hàng tuần",
+    "hint": "Khi tạo ghi chú hằng ngày, tự động tạo ghi chú của tuần hiện tại nếu chưa tồn tại."
+  },
   "monthly": {
     "enable": "Bật ghi chú tháng",
     "pathLabel": "Đường dẫn ghi chú tháng",

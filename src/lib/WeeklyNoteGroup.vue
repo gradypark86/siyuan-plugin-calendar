@@ -136,6 +136,8 @@ const yearlyPathInvalid = computed(() => yearlyEnabled.value && !String(yearlyPa
 
 .period-section.disabled {
   opacity: 0.58;
+  border-top: none;
+  padding-top: 0;
 }
 
 .period-body {

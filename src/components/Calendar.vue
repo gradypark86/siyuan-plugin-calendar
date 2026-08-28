@@ -93,7 +93,7 @@ import dayjs from 'dayjs';
 import * as api from '@/api/api';
 import { openDoc } from '@/api/daily-note';
 import { useLocale, formatMsg } from '@/hooks/useLocale';
-import { eventBus, weekStart, showWeekNum, weeklyEnabled, i18n, confirmCreateDailyNote } from '@/hooks/useSiYuan';
+import { eventBus, weekStart, showWeekNum, weeklyEnabled, autoCreateWeekly, i18n, confirmCreateDailyNote } from '@/hooks/useSiYuan';
 import { CusNotebook } from '@/utils/notebook';
 import { refreshSql } from '@/api/utils';
 import { getEffectiveNow } from '@/utils/dayRollover';
@@ -572,7 +572,7 @@ async function openDailyNote(date: Date) {
     // Ensure yearly/monthly/weekly notes exist first (if enabled).
     // Pass weekNum so weekly path-overlap parents can get template backfill.
     const weekNumForDay = getCalendarWeekNum(d, Number(weekStart.value));
-    await ensurePeriodNotes(d.toDate(), weekNumForDay);
+    await ensurePeriodNotes(d.toDate(), weekNumForDay, autoCreateWeekly.value);
 
     // 创建日报
     try {

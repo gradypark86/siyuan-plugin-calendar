@@ -84,6 +84,19 @@
 
         <label class="fn__flex b3-label setting-item">
           <div class="fn__flex-1">
+            {{ t.autoCreateWeekly?.title || 'Automatically create weekly note' }}
+            <div class="b3-label__text">
+              {{ t.autoCreateWeekly?.hint || 'When creating a daily note, create the current weekly note if it does not exist.' }}
+            </div>
+          </div>
+          <span class="fn__space"></span>
+          <div class="setting-control">
+            <AutoCreateWeeklyToggle />
+          </div>
+        </label>
+
+        <label class="fn__flex b3-label setting-item">
+          <div class="fn__flex-1">
             {{ t.monthly?.enable || 'Enable monthly notes' }}
           </div>
           <span class="fn__space"></span>
@@ -153,6 +166,7 @@ import SySelect from './SySelect.vue';
 import WeekStartSelect from './WeekStartSelect.vue';
 import ShowWeekNumToggle from './ShowWeekNumToggle.vue';
 import WeeklySettings from './WeeklySettings.vue';
+import AutoCreateWeeklyToggle from './AutoCreateWeeklyToggle.vue';
 import MonthlySettings from './MonthlySettings.vue';
 import YearlySettings from './YearlySettings.vue';
 import WeeklyNoteGroup from './WeeklyNoteGroup.vue';

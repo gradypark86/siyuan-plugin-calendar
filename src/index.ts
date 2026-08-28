@@ -10,6 +10,7 @@ import {
   weekStart,
   showWeekNum,
   weeklyEnabled,
+  autoCreateWeekly,
   weeklyPath,
   weeklyTemplatePath,
   monthlyEnabled,
@@ -58,6 +59,7 @@ export default class ArcoCalendarPlugin extends Plugin {
         weekStart: 1,
         showWeekNum: false,
         weeklyEnabled: false,
+        autoCreateWeekly: false,
         weeklyPath: '',
         weeklyTemplatePath: '',
         monthlyEnabled: false,
@@ -75,6 +77,7 @@ export default class ArcoCalendarPlugin extends Plugin {
       weekStart.value = 1;
       showWeekNum.value = false;
       weeklyEnabled.value = false;
+      autoCreateWeekly.value = false;
       weeklyPath.value = '';
       weeklyTemplatePath.value = '';
       monthlyEnabled.value = false;
@@ -96,6 +99,9 @@ export default class ArcoCalendarPlugin extends Plugin {
       }
       if (data.weeklyEnabled !== undefined) {
         weeklyEnabled.value = Boolean(data.weeklyEnabled);
+      }
+      if (data.autoCreateWeekly !== undefined) {
+        autoCreateWeekly.value = Boolean(data.autoCreateWeekly);
       }
       if (data.weeklyPath !== undefined) {
         weeklyPath.value = String(data.weeklyPath);
@@ -257,6 +263,10 @@ export default class ArcoCalendarPlugin extends Plugin {
       autoDisabled.push(yearlyPathLabel);
     }
 
+    if (!weeklyEnabledValue || !weeklyPathValue) {
+      autoCreateWeekly.value = false;
+    }
+
     if (autoDisabled.length > 0) {
       const msgTpl = i18n.value.msg?.periodicPathAutoDisabled
         || 'Detected empty storage paths and automatically disabled related toggles: {items}';
@@ -268,6 +278,7 @@ export default class ArcoCalendarPlugin extends Plugin {
       weekStart: Number(weekStart.value),
       showWeekNum: showWeekNum.value,
       weeklyEnabled: weeklyEnabledValue,
+      autoCreateWeekly: Boolean(autoCreateWeekly.value),
       weeklyPath: weeklyPathValue,
       weeklyTemplatePath: weeklyTemplatePath.value,
       monthlyEnabled: monthlyEnabledValue,

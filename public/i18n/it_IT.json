@@ -55,6 +55,10 @@
     "templateHint": "ad es. weekly-template.md — inserisci questo file in workspace/data/templates/. Lascia vuoto per non applicare il modello.",
     "pathRequired": "Il percorso delle note settimanali è obbligatorio."
   },
+  "autoCreateWeekly": {
+    "title": "Crea automaticamente la nota settimanale",
+    "hint": "Quando crei una nota giornaliera, crea la nota della settimana corrente se non esiste."
+  },
   "monthly": {
     "enable": "Abilita note mensili",
     "pathLabel": "Percorso note mensili",
