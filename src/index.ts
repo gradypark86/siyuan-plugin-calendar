@@ -25,6 +25,7 @@ import {
   confirmCreateDailyNote,
 } from './hooks/useSiYuan';
 import SettingsTabs from './lib/SettingsTabs.vue';
+import { request } from './api/api';
 import './index.less';
 import showMessage from 'siyuan';
 import { normalizeDayRolloverHour, normalizeDayRolloverMinute } from './utils/dayRollover';
@@ -277,12 +278,15 @@ export default class ArcoCalendarPlugin extends Plugin {
 
     const cancelBtn = dialog.element.querySelector('[data-action="cancel"]') as HTMLButtonElement | null;
     const saveBtn = dialog.element.querySelector('[data-action="save"]') as HTMLButtonElement | null;
-    cancelBtn?.addEventListener('click', () => dialog.destroy());
+    cancelBtn?.addEventListener('click', () => {
+      restoreSettings();
+      dialog.destroy();
+    });
     saveBtn?.addEventListener('click', async () => {
       await this.saveSettings();
       settingsSaved = true;
       dialog.destroy();
-      window.location.reload();
+      await request('/api/ui/reloadUI');
     });
   }
 

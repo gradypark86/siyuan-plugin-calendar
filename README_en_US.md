@@ -2,7 +2,7 @@
 
 [简体中文](https://github.com/gradypark86/siyuan-plugin-calendar/blob/main/README.md) \| English
 
-A SiYuan Note calendar panel plugin that allows quick creation of daily and weekly notes, and supports automatic template loading for periodic notes such as weekly, monthly, and yearly notes.
+A SiYuan Note calendar panel plugin that allows quick creation of periodic notes such as daily, weekly, monthly, and yearly notes, with automatic template loading support.
 
 ![Project Screenshot](https://imgs.pprain.space/2026/01/41d3d243f69952db7cf91a75d4963246.png)
 
@@ -14,9 +14,13 @@ A SiYuan Note calendar panel plugin that allows quick creation of daily and week
   - Optional start day of the week (Sunday/Monday)
   - Adaptive width scaling in sidebar mode
   - Click on a date to quickly create or jump to that day's daily note
+  - Support switching between multiple notebooks
 - Periodic Note Features
-  - Optional weekly note feature; when enabled, click on the week number to create a corresponding weekly note
-  - Supports setting creation paths and templates for weekly, monthly, and yearly notes
+  - Optional weekly note feature; when enabled, click on the week number to create a corresponding weekly note, or automatically create the current week's note when creating a daily note
+  - Supports customizing creation paths and templates for weekly, monthly, and yearly notes
+- Custom Configuration
+  - Configure the time when a new day begins
+- Support for all platforms
 
 ## References and Thanks
 
