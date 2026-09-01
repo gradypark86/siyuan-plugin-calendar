@@ -34,6 +34,8 @@ const STORAGE_NAME = 'arco-calendar-entry';
 export default class ArcoCalendarPlugin extends Plugin {
   private topEle!: HTMLElement;
   private menuEle!: HTMLElement;
+  private menuVueApp: VueApp | null = null;
+  private dockVueApp: VueApp | null = null;
   private settingVueApp: VueApp | null = null;
 
   async onload() {
@@ -46,6 +48,10 @@ export default class ArcoCalendarPlugin extends Plugin {
 
   onunload() {
     console.log(this.i18n.byePlugin);
+    this.menuVueApp?.unmount();
+    this.menuVueApp = null;
+    this.dockVueApp?.unmount();
+    this.dockVueApp = null;
     this.topEle?.remove();
     this.menuEle?.remove();
     this.settingVueApp?.unmount();
@@ -169,6 +175,48 @@ export default class ArcoCalendarPlugin extends Plugin {
    * Avoids official Setting.addItem wrapper which injects outer b3-label padding/border.
    */
   openSetting() {
+    const settingsSnapshot = {
+      position: position.value,
+      weekStart: weekStart.value,
+      showWeekNum: showWeekNum.value,
+      weeklyEnabled: weeklyEnabled.value,
+      autoCreateWeekly: autoCreateWeekly.value,
+      autoCreateWeeklyForced: autoCreateWeeklyForced.value,
+      weeklyPath: weeklyPath.value,
+      weeklyTemplatePath: weeklyTemplatePath.value,
+      monthlyEnabled: monthlyEnabled.value,
+      monthlyPath: monthlyPath.value,
+      monthlyTemplatePath: monthlyTemplatePath.value,
+      yearlyEnabled: yearlyEnabled.value,
+      yearlyPath: yearlyPath.value,
+      yearlyTemplatePath: yearlyTemplatePath.value,
+      dayRolloverHour: dayRolloverHour.value,
+      dayRolloverMinute: dayRolloverMinute.value,
+      confirmCreateDailyNote: confirmCreateDailyNote.value,
+    };
+    let settingsSaved = false;
+    let settingsRestored = false;
+    const restoreSettings = () => {
+      if (settingsSaved || settingsRestored) return;
+      settingsRestored = true;
+      position.value = settingsSnapshot.position;
+      weekStart.value = settingsSnapshot.weekStart;
+      showWeekNum.value = settingsSnapshot.showWeekNum;
+      weeklyEnabled.value = settingsSnapshot.weeklyEnabled;
+      autoCreateWeekly.value = settingsSnapshot.autoCreateWeekly;
+      autoCreateWeeklyForced.value = settingsSnapshot.autoCreateWeeklyForced;
+      weeklyPath.value = settingsSnapshot.weeklyPath;
+      weeklyTemplatePath.value = settingsSnapshot.weeklyTemplatePath;
+      monthlyEnabled.value = settingsSnapshot.monthlyEnabled;
+      monthlyPath.value = settingsSnapshot.monthlyPath;
+      monthlyTemplatePath.value = settingsSnapshot.monthlyTemplatePath;
+      yearlyEnabled.value = settingsSnapshot.yearlyEnabled;
+      yearlyPath.value = settingsSnapshot.yearlyPath;
+      yearlyTemplatePath.value = settingsSnapshot.yearlyTemplatePath;
+      dayRolloverHour.value = settingsSnapshot.dayRolloverHour;
+      dayRolloverMinute.value = settingsSnapshot.dayRolloverMinute;
+      confirmCreateDailyNote.value = settingsSnapshot.confirmCreateDailyNote;
+    };
     const cancelLabel = i18n.value?.msg?.cancel || 'Cancel';
     const saveLabel = i18n.value?.msg?.confirm || 'Save';
     const title =
@@ -192,6 +240,7 @@ export default class ArcoCalendarPlugin extends Plugin {
       width: isMobile.value ? '100%' : '50rem',
       height: isMobile.value ? '100%' : '34rem',
       destroyCallback: () => {
+        restoreSettings();
         this.settingVueApp?.unmount();
         this.settingVueApp = null;
       },
@@ -231,6 +280,7 @@ export default class ArcoCalendarPlugin extends Plugin {
     cancelBtn?.addEventListener('click', () => dialog.destroy());
     saveBtn?.addEventListener('click', async () => {
       await this.saveSettings();
+      settingsSaved = true;
       dialog.destroy();
       window.location.reload();
     });
@@ -320,8 +370,11 @@ export default class ArcoCalendarPlugin extends Plugin {
         }
       },
     });
+    this.menuVueApp?.unmount();
+    this.menuEle?.remove();
     this.menuEle = document.createElement('div');
-    createApp(App).mount(this.menuEle);
+    this.menuVueApp = createApp(App);
+    this.menuVueApp.mount(this.menuEle);
   }
 
   private addDockItem() {
@@ -337,7 +390,9 @@ export default class ArcoCalendarPlugin extends Plugin {
       data: {},
       type: 'dock_tab',
       init: dock => {
-        createApp(App).mount(dock.element);
+        this.dockVueApp?.unmount();
+        this.dockVueApp = createApp(App);
+        this.dockVueApp.mount(dock.element);
       },
     });
   }

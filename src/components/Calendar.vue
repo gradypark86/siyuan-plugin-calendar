@@ -200,6 +200,7 @@ onMounted(() => document.addEventListener('click', onDocumentClick));
 onBeforeUnmount(() => {
   document.removeEventListener('click', onDocumentClick);
   clearRefreshRetryTimers();
+  mainEventBus?.off('ws-main', wsMainHandler);
 });
 
 // 已存在日记的日期
@@ -714,7 +715,8 @@ watch(displayedMonth, (newMonth) => {
 });
 
 // 监听思源笔记事件，刷新日期列表
-eventBus.value?.on('ws-main', async ({ detail }) => {
+const mainEventBus = eventBus.value;
+const wsMainHandler = async ({ detail }: CustomEvent<any>) => {
   if (!notebook.value) {
     return;
   }
@@ -732,7 +734,8 @@ eventBus.value?.on('ws-main', async ({ detail }) => {
   if (['createdailynote', 'createDoc', 'create'].includes(cmd)) {
     scheduleRefreshAfterMutation();
   }
-});
+};
+mainEventBus?.on('ws-main', wsMainHandler);
 
 // 初始化
 getExistDate(getEffectiveNow().toDate());

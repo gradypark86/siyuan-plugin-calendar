@@ -81,6 +81,8 @@ const selectNotebookId = ref<NotebookId | undefined>(undefined);
 const selectNotebook = computed(() => cusNotebooks.value.find(book => book.id === selectNotebookId.value));
 const panelRootRef = ref<HTMLElement | null>(null);
 const dropdownWheelCleanupFns: Array<() => void> = [];
+let initToken = 0;
+let disposed = false;
 
 function bindNotebookDropdownWheelFix() {
   const dropdowns = document.querySelectorAll('.arco-select-dropdown');
@@ -128,29 +130,33 @@ function handleNotebookDropdownVisibleChange(visible: boolean) {
 }
 
 async function init() {
-  const { notebooks } = await lsNotebooks();
+  const token = ++initToken;
+  const [{ notebooks }, storage] = await Promise.all([
+    lsNotebooks(),
+    request('/api/storage/getLocalStorage'),
+  ]);
   const books = notebooks.filter((book: Notebook) => !book.closed);
-  for (const book of books) {
-    const cusNotebook = await CusNotebook.build(book);
-    cusNotebooks.value.push(cusNotebook);
-  }
-  const storage = await request('/api/storage/getLocalStorage');
-  if (cusNotebooks.value.map(book => book.id).includes(storage['local-dailynoteid'])) {
+  const loadedNotebooks = await Promise.all(books.map(book => CusNotebook.build(book)));
+  if (disposed || token !== initToken) return;
+
+  cusNotebooks.value = loadedNotebooks;
+  if (loadedNotebooks.some(book => book.id === storage['local-dailynoteid'])) {
     selectNotebookId.value = storage['local-dailynoteid'];
   } else {
     selectNotebookId.value = undefined;
   }
 }
-init();
+void init();
 
-eventBus.value?.on('ws-main', async ({ detail }) => {
+const mainEventBus = eventBus.value;
+const wsMainHandler = async ({ detail }: CustomEvent<any>) => {
   const { cmd } = detail;
   if (['createnotebook', 'mount', 'unmount'].includes(cmd)) {
     await refreshSql();
-    cusNotebooks.value = [];
     await init();
   }
-});
+};
+mainEventBus?.on('ws-main', wsMainHandler);
 
 watch(selectNotebookId, async bookId => {
   if (!bookId) {
@@ -176,6 +182,9 @@ watch(selectNotebook, async notebook => {
 // weekStart is managed by plugin settings; no local storage writes here.
 
 onBeforeUnmount(() => {
+  disposed = true;
+  initToken += 1;
+  mainEventBus?.off('ws-main', wsMainHandler);
   for (const cleanup of dropdownWheelCleanupFns) {
     cleanup();
   }

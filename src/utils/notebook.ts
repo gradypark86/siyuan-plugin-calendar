@@ -47,6 +47,8 @@ async function getTemplatesDir(): Promise<string> {
 
 export class CusNotebook implements Notebook, NotebookConf {
   private weeklyCreationLocks = new Map<string, Promise<string>>();
+  private monthlyCreationLocks = new Map<string, Promise<string>>();
+  private yearlyCreationLocks = new Map<string, Promise<string>>();
 
   constructor(
     public id: NotebookId,
@@ -94,11 +96,11 @@ export class CusNotebook implements Notebook, NotebookConf {
 
   async createDailyNote(date: Date): Promise<DailyNote> {
     const hPath = await this.getSavePath(date);
-    const [dailyNote] = await this.searchDailyNote(`hpath = '${hPath}'`);
     const dateStr = dayjs(date).format('YYYY-MM-DD');
+    const existingId = await this.getDocIdByHPath(hPath);
     // 当前日期已有日记却无文档属性，设置后返回日记
-    if (dailyNote) {
-      const { id } = dailyNote;
+    if (existingId) {
+      const id = existingId;
       setCustomDNAttr(id, date); //为新建的日记添加自定义属性
       return { id, dateStr };
     }
@@ -304,7 +306,24 @@ export class CusNotebook implements Notebook, NotebookConf {
 
   async createMonthlyNote(date: Date): Promise<string> {
     const hPath = await this.getMonthlySavePath(date);
-    const existingId = await this.getExistMonthlyNote(date);
+    const inFlight = this.monthlyCreationLocks.get(hPath);
+    if (inFlight) {
+      return inFlight;
+    }
+
+    const operation = this.createMonthlyNoteOnce(hPath);
+    this.monthlyCreationLocks.set(hPath, operation);
+    try {
+      return await operation;
+    } finally {
+      if (this.monthlyCreationLocks.get(hPath) === operation) {
+        this.monthlyCreationLocks.delete(hPath);
+      }
+    }
+  }
+
+  private async createMonthlyNoteOnce(hPath: string): Promise<string> {
+    const existingId = await this.getDocIdByHPath(hPath);
     if (existingId) {
       await this.applyTemplateIfDocEmpty(existingId, monthlyTemplatePath.value);
       return existingId;
@@ -333,7 +352,24 @@ export class CusNotebook implements Notebook, NotebookConf {
 
   async createYearlyNote(date: Date): Promise<string> {
     const hPath = await this.getYearlySavePath(date);
-    const existingId = await this.getExistYearlyNote(date);
+    const inFlight = this.yearlyCreationLocks.get(hPath);
+    if (inFlight) {
+      return inFlight;
+    }
+
+    const operation = this.createYearlyNoteOnce(hPath);
+    this.yearlyCreationLocks.set(hPath, operation);
+    try {
+      return await operation;
+    } finally {
+      if (this.yearlyCreationLocks.get(hPath) === operation) {
+        this.yearlyCreationLocks.delete(hPath);
+      }
+    }
+  }
+
+  private async createYearlyNoteOnce(hPath: string): Promise<string> {
+    const existingId = await this.getDocIdByHPath(hPath);
     if (existingId) {
       await this.applyTemplateIfDocEmpty(existingId, yearlyTemplatePath.value);
       return existingId;
