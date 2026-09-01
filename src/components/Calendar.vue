@@ -488,11 +488,13 @@ function nextMonth() {
   changeMonth(displayedMonth.value);
 }
 
-function clickToday() {
+async function clickToday() {
   const effectiveToday = getEffectiveNow();
   displayedMonth.value = effectiveToday;
-  changeMonth(effectiveToday.toDate());
-  openDailyNote(effectiveToday.toDate());
+  // Wait for the target month's note map before checking whether today's note exists.
+  // Without this, switching from another month races openDailyNote against getExistDate.
+  await changeMonth(effectiveToday.toDate());
+  await openDailyNote(effectiveToday.toDate());
 }
 
 /**
