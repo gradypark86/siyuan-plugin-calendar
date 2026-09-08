@@ -321,7 +321,7 @@ export class CusNotebook implements Notebook, NotebookConf {
     return this.getWeeklyCanonicalPath(date);
   }
 
-  async getExistWeeklyNote(date: Date): Promise<string | undefined> {
+  async getExistWeeklyNote(date: Date, backfill = true): Promise<string | undefined> {
     // Attribute identity is rule-independent and survives path edits. Check it first.
     const attrId = await this.getDocIdByWeeklyAttr(getWeekIsoKey(date, Number(weekStart.value)));
     if (attrId) return attrId;
@@ -331,7 +331,9 @@ export class CusNotebook implements Notebook, NotebookConf {
       const found = await this.getDocIdByHPath(p);
       if (found) {
         // Backfill attribute for old notes found via path so future lookups are faster.
-        await this.setWeeklyNoteAttr(found, date);
+        if (backfill) {
+          await this.setWeeklyNoteAttr(found, date);
+        }
         return found;
       }
     }
@@ -638,6 +640,16 @@ export class CusNotebook implements Notebook, NotebookConf {
   async backfillPeriodicNoteAttrs(): Promise<{ weekly: number; monthly: number; yearly: number }> {
     const counts = { weekly: 0, monthly: 0, yearly: 0 };
 
+    // Attribute writes are handled by SiYuan's transaction layer. Flush it
+    // before taking the snapshot below; otherwise a second immediate run can
+    // query the stale attributes index and count the same notes again.
+    try {
+      await api.request('/api/sqlite/flushTransaction');
+    } catch (e) {
+      // Continue if this endpoint is unavailable; the normal SQL query remains
+      // the best available fallback on older SiYuan versions.
+    }
+
     // One JOIN query fetches every doc together with its periodic-note
     // attributes, so no per-document getBlockAttrs round-trips are needed.
     const rows = await api.sql(
@@ -687,6 +699,19 @@ export class CusNotebook implements Notebook, NotebookConf {
 
     const activeRule = effectiveWeekRule.value;
 
+    // The initial SQL snapshot can lag behind an attribute write. For each
+    // path hit, verify the exact target attribute through the block-attribute
+    // API before deciding whether this run should count a backfill.
+    const hasExactAttr = async (docID: string, attrName: string): Promise<boolean> => {
+      try {
+        const attrs = await api.getBlockAttrs(docID);
+        return Object.prototype.hasOwnProperty.call(attrs || {}, attrName);
+      } catch (e) {
+        // Preserve the previous best-effort behavior when the API is unavailable.
+        return false;
+      }
+    };
+
     // First try the same date-to-path lookup used by the calendar itself. This
     // is more reliable than extracting values from arbitrary filenames and
     // covers notes created since the plugin was first published. Start from the
@@ -711,15 +736,19 @@ export class CusNotebook implements Notebook, NotebookConf {
           try {
             // getExistWeeklyNote checks attributes first, then canonical and
             // legacy paths. A path hit also performs best-effort backfilling.
-            const docID = await this.getExistWeeklyNote(repDay.toDate());
+            // Disable getExistWeeklyNote's automatic backfill here so the
+            // count reflects whether this invocation actually added the attr.
+            const docID = await this.getExistWeeklyNote(repDay.toDate(), false);
             if (docID && !existingWeeklyKeys.has(weekKey)) {
-              // Ensure the write is completed before recording the key/count.
-              // This is normally already done by getExistWeeklyNote's path
-              // fallback, but keeping it here also handles older implementations
-              // of CusNotebook and makes the backfill result deterministic.
-              await setCustomWeeklyAttr(docID, weekKey);
-              existingWeeklyKeys.add(weekKey);
-              counts.weekly++;
+              const attrName = `custom-calendar-weekly-${weekKey}`;
+              if (await hasExactAttr(docID, attrName)) {
+                existingWeeklyKeys.add(weekKey);
+              } else {
+                // Ensure the write is completed before recording the key/count.
+                await setCustomWeeklyAttr(docID, weekKey);
+                existingWeeklyKeys.add(weekKey);
+                counts.weekly++;
+              }
             }
           } catch (e) {
             // Continue with the regex fallback if an individual path lookup or
@@ -745,9 +774,14 @@ export class CusNotebook implements Notebook, NotebookConf {
             const hPath = await this.getMonthlySavePath(cursor.toDate());
             const docID = await this.getDocIdByHPath(hPath);
             if (docID && !existingMonthlyKeys.has(monthKey)) {
-              await setCustomMonthlyAttr(docID, monthKey);
-              existingMonthlyKeys.add(monthKey);
-              counts.monthly++;
+              const attrName = `custom-calendar-monthly-${monthKey}`;
+              if (await hasExactAttr(docID, attrName)) {
+                existingMonthlyKeys.add(monthKey);
+              } else {
+                await setCustomMonthlyAttr(docID, monthKey);
+                existingMonthlyKeys.add(monthKey);
+                counts.monthly++;
+              }
             }
           } catch (e) {
             console.warn('[backfillAttrs] monthly path lookup failed', monthKey, e);
@@ -770,9 +804,14 @@ export class CusNotebook implements Notebook, NotebookConf {
             const hPath = await this.getYearlySavePath(cursor.toDate());
             const docID = await this.getDocIdByHPath(hPath);
             if (docID && !existingYearlyKeys.has(yearKey)) {
-              await setCustomYearlyAttr(docID, yearKey);
-              existingYearlyKeys.add(yearKey);
-              counts.yearly++;
+              const attrName = `custom-calendar-yearly-${yearKey}`;
+              if (await hasExactAttr(docID, attrName)) {
+                existingYearlyKeys.add(yearKey);
+              } else {
+                await setCustomYearlyAttr(docID, yearKey);
+                existingYearlyKeys.add(yearKey);
+                counts.yearly++;
+              }
             }
           } catch (e) {
             console.warn('[backfillAttrs] yearly path lookup failed', yearKey, e);
@@ -831,6 +870,13 @@ export class CusNotebook implements Notebook, NotebookConf {
       }
     }
 
+    try {
+      // Make the newly written attributes visible to a subsequent immediate
+      // invocation as well as to the calendar's next SQL refresh.
+      await api.request('/api/sqlite/flushTransaction');
+    } catch (e) {
+      // Best effort only; attribute writes have already completed individually.
+    }
     return counts;
   }
 
