@@ -32,6 +32,23 @@
   "showWeekNum": {
     "title": "주 번호 표시"
   },
+  "weekNumRule": {
+    "title": "Week number rule",
+    "hint": "Calendar week: the week containing Jan 1 is week 1. ISO 8601: the week starts on Monday and the week containing the first Thursday is week 1; it only takes effect when “Week starts on” is set to Monday. Weekly notes with document attributes are unaffected by switching rules; if historical weekly notes have no attributes yet, run “Backfill Now” before changing this setting.",
+    "calendar": "Calendar week",
+    "iso": "ISO 8601"
+  },
+  "backfillAttrs": {
+    "title": "Backfill periodic note attributes",
+    "hint": "Periodic notes created after v0.5.0 already have document attributes automatically. Only notes created before v0.5.0 need backfilling. This scans the weekly/monthly/yearly notes in the current notebook and adds missing attributes, so the calendar can still find them even if you change their storage paths later.",
+    "button": "Backfill Now",
+    "processing": "Processing...",
+    "success": "Backfilled {total} notes: {weekly} weekly, {monthly} monthly, {yearly} yearly.",
+    "nothingToBackfill": "All periodic notes already have attributes. Nothing to backfill.",
+    "error": "Failed to backfill attributes. Check console for details.",
+    "noNotebook": "No notebook selected. Please select a notebook first.",
+    "notSupported": "Backfill is not supported by the current notebook instance."
+  },
   "settingsTabs": {
     "basic": "패널 설정",
     "periodic": "주기 노트 설정",

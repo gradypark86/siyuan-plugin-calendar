@@ -93,11 +93,11 @@ import dayjs from 'dayjs';
 import * as api from '@/api/api';
 import { openDoc } from '@/api/daily-note';
 import { useLocale, formatMsg } from '@/hooks/useLocale';
-import { eventBus, weekStart, showWeekNum, weeklyEnabled, autoCreateWeekly, autoCreateWeeklyForced, i18n, confirmCreateDailyNote } from '@/hooks/useSiYuan';
+import { eventBus, weekStart, showWeekNum, weeklyEnabled, autoCreateWeekly, autoCreateWeeklyForced, effectiveWeekRule, i18n, confirmCreateDailyNote } from '@/hooks/useSiYuan';
 import { CusNotebook } from '@/utils/notebook';
 import { refreshSql } from '@/api/utils';
 import { getEffectiveNow } from '@/utils/dayRollover';
-import { getCalendarWeekNum } from '@/utils/weekNum';
+import { getCalendarWeekNum, getIsoWeekNum, getWeekIsoKey } from '@/utils/weekNum';
 import ConfirmDialog from './ConfirmDialog.vue';
 
 const { locale, localeType } = useLocale();
@@ -326,27 +326,30 @@ async function loadExistWeeklyNotes() {
 
   if (!notebook.value) return;
   const nb: any = notebook.value as any;
-  if (typeof nb.getExistWeeklyNote !== 'function') return;
+  if (typeof nb.getExistWeeklyNotesByKeys !== 'function') return;
 
-  const results = await Promise.all(
-    monthWeeks.value.map(async week => {
+  // Collect all week keys for the current month's rows.
+  const weekKeys = monthWeeks.value.map(week => {
+    const repDay = week.days[Math.floor(week.days.length / 2)];
+    return getWeekIsoKey(repDay, Number(weekStart.value));
+  });
+
+  try {
+    const attrMap = await nb.getExistWeeklyNotesByKeys(weekKeys);
+    // Prevent stale results from overwriting newer state.
+    if (token !== weeklyFetchToken) return;
+
+    // Map weekKey back to the display key used by the calendar (startDate#weekNum).
+    for (const week of monthWeeks.value) {
       const repDay = week.days[Math.floor(week.days.length / 2)];
-      try {
-        const id = await nb.getExistWeeklyNote(repDay.toDate(), week.weekNum);
-        if (!id) return null;
-        return [getWeekKey(week), id] as const;
-      } catch (e) {
-        return null;
+      const weekKey = getWeekIsoKey(repDay, Number(weekStart.value));
+      const docId = attrMap.get(weekKey);
+      if (docId) {
+        existWeeklyNotesMap.value.set(getWeekKey(week), docId);
       }
-    })
-  );
-
-  // 防止旧请求覆盖新状态
-  if (token !== weeklyFetchToken) return;
-  for (const row of results) {
-    if (row) {
-      existWeeklyNotesMap.value.set(row[0], row[1]);
     }
+  } catch (e) {
+    console.error('[calendar] loadExistWeeklyNotes error', e);
   }
 }
 
@@ -384,11 +387,15 @@ const monthWeeks = computed(() => {
       currentDate = currentDate.add(1, 'day');
     }
 
-    // Same week-number algorithm as getCalendarWeekNum (week end day of this row).
-    const isoWeekNum = getCalendarWeekNum(weekDays[6], startDay);
+    // Week number under the active rule. ISO requires Monday-start weeks, so it
+    // only applies when weekStart is Monday; otherwise the calendar week is used.
+    const rowWeekNum =
+      effectiveWeekRule.value === 'iso'
+        ? getIsoWeekNum(weekDays[6]).week
+        : getCalendarWeekNum(weekDays[6], startDay);
 
     weeks.push({
-      weekNum: isoWeekNum,
+      weekNum: rowWeekNum,
       days: weekDays
     });
 
@@ -448,13 +455,13 @@ async function refreshExistDates() {
  * Ensure yearly/monthly/weekly notes exist before creating daily notes.
  * Weekly is included so path-overlap parents get template backfill.
  */
-async function ensurePeriodNotes(date: Date, weekNum?: number, includeWeekly = true) {
+async function ensurePeriodNotes(date: Date, includeWeekly = true) {
   if (!notebook.value) return;
 
   const nb: any = notebook.value as any;
   try {
     if (typeof nb.ensurePeriodNotes === 'function') {
-      await nb.ensurePeriodNotes(date, weekNum, includeWeekly);
+      await nb.ensurePeriodNotes(date, includeWeekly);
       return;
     }
 
@@ -467,10 +474,9 @@ async function ensurePeriodNotes(date: Date, weekNum?: number, includeWeekly = t
     if (
       weeklyEnabled.value &&
       includeWeekly &&
-      typeof nb.createWeeklyNote === 'function' &&
-      weekNum != null
+      typeof nb.createWeeklyNote === 'function'
     ) {
-      await nb.createWeeklyNote(date, weekNum);
+      await nb.createWeeklyNote(date);
     }
   } catch (e) {
     console.error('[calendar] ensurePeriodNotes error', e);
@@ -573,9 +579,8 @@ async function openDailyNote(date: Date) {
     }
 
     // Ensure yearly/monthly/weekly notes exist first (if enabled).
-    // Pass weekNum so weekly path-overlap parents can get template backfill.
-    const weekNumForDay = getCalendarWeekNum(d, Number(weekStart.value));
-    await ensurePeriodNotes(d.toDate(), weekNumForDay, autoCreateWeekly.value || autoCreateWeeklyForced.value);
+    // Weekly numbering (calendar vs ISO) is resolved internally from the date.
+    await ensurePeriodNotes(d.toDate(), autoCreateWeekly.value || autoCreateWeeklyForced.value);
 
     // 创建日报
     try {
@@ -629,14 +634,14 @@ async function openWeeklyNote(week: { weekNum: number; days: dayjs.Dayjs[] }) {
 
     // Yearly/monthly first if enabled (weekly is handled by createWeeklyNote itself).
     // Yearly/monthly notes only; createWeeklyNote below is the single weekly creation call.
-    await ensurePeriodNotes(repDay.toDate(), week.weekNum, false);
+    await ensurePeriodNotes(repDay.toDate(), false);
 
     const existedBefore =
       typeof nb.getExistWeeklyNote === 'function'
-        ? Boolean(await nb.getExistWeeklyNote(repDay.toDate(), week.weekNum))
+        ? Boolean(await nb.getExistWeeklyNote(repDay.toDate()))
         : false;
 
-    const id = await nb.createWeeklyNote(repDay.toDate(), week.weekNum);
+    const id = await nb.createWeeklyNote(repDay.toDate());
     if (!id) {
       await api.pushErrMsg(formatMsg('failedToCreateWeeklyNote'));
       return;
@@ -707,6 +712,10 @@ watch(notebook, notebook => {
 });
 
 watch(() => weekStart.value, () => {
+  loadExistWeeklyNotes();
+});
+
+watch(() => effectiveWeekRule.value, () => {
   loadExistWeeklyNotes();
 });
 

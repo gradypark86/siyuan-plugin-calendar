@@ -128,6 +128,38 @@
       >
         <label class="fn__flex b3-label setting-item">
           <div class="fn__flex-1">
+            {{ t.weekNumRule?.title || 'Week number rule' }}
+            <div class="b3-label__text">
+              {{
+                t.weekNumRule?.hint ||
+                'Calendar week: the week containing Jan 1 is week 1. ISO 8601: the week starts on Monday and the week containing the first Thursday is week 1; it only takes effect when "Week starts on" is set to Monday. Weekly notes with document attributes are unaffected by switching rules; if historical weekly notes have no attributes yet, run "Backfill Now" before changing this setting.'
+              }}
+            </div>
+          </div>
+          <span class="fn__space"></span>
+          <div class="setting-control">
+            <WeekNumRuleSelect />
+          </div>
+        </label>
+
+        <label class="fn__flex b3-label setting-item">
+          <div class="fn__flex-1">
+            {{ t.backfillAttrs?.title || 'Backfill periodic note attributes' }}
+            <div class="b3-label__text">
+              {{
+                t.backfillAttrs?.hint ||
+                'Periodic notes created after v0.5.0 already have document attributes automatically. Only notes created before v0.5.0 need backfilling. This scans the weekly/monthly/yearly notes in the current notebook and adds missing attributes, so the calendar can still find them even if you change their storage paths later.'
+              }}
+            </div>
+          </div>
+          <span class="fn__space"></span>
+          <div class="setting-control">
+            <BackfillAttrsButton />
+          </div>
+        </label>
+
+        <label class="fn__flex b3-label setting-item">
+          <div class="fn__flex-1">
             {{ t.dayRolloverHour?.title || 'New day starts at' }}
             <div class="b3-label__text">
               {{
@@ -167,6 +199,7 @@ import { computed, ref } from 'vue';
 import { i18n, autoCreateWeeklyForced } from '@/hooks/useSiYuan';
 import SySelect from './SySelect.vue';
 import WeekStartSelect from './WeekStartSelect.vue';
+import WeekNumRuleSelect from './WeekNumRuleSelect.vue';
 import ShowWeekNumToggle from './ShowWeekNumToggle.vue';
 import WeeklySettings from './WeeklySettings.vue';
 import AutoCreateWeeklyToggle from './AutoCreateWeeklyToggle.vue';
@@ -175,6 +208,7 @@ import YearlySettings from './YearlySettings.vue';
 import WeeklyNoteGroup from './WeeklyNoteGroup.vue';
 import DayRolloverTimeInput from './DayRolloverTimeInput.vue';
 import ConfirmCreateDailyToggle from './ConfirmCreateDailyToggle.vue';
+import BackfillAttrsButton from './BackfillAttrsButton.vue';
 
 const activeTab = ref<'basic' | 'periodic' | 'advanced'>('basic');
 

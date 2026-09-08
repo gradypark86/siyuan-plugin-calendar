@@ -8,6 +8,7 @@ import {
   eventBus,
   position,
   weekStart,
+  weekNumRule,
   showWeekNum,
   weeklyEnabled,
   autoCreateWeekly,
@@ -65,6 +66,7 @@ export default class ArcoCalendarPlugin extends Plugin {
       await this.saveData(STORAGE_NAME, {
         position: 'top-left',
         weekStart: 1,
+        weekNumRule: 'calendar',
         showWeekNum: false,
         weeklyEnabled: false,
         autoCreateWeekly: false,
@@ -83,6 +85,7 @@ export default class ArcoCalendarPlugin extends Plugin {
       await this.loadData(STORAGE_NAME);
       position.value = 'top-left';
       weekStart.value = 1;
+      weekNumRule.value = 'calendar';
       showWeekNum.value = false;
       weeklyEnabled.value = false;
       autoCreateWeekly.value = false;
@@ -102,6 +105,9 @@ export default class ArcoCalendarPlugin extends Plugin {
       position.value = data.position;
       if (data.weekStart !== undefined) {
         weekStart.value = Number(data.weekStart);
+      }
+      if (data.weekNumRule === 'iso' || data.weekNumRule === 'calendar') {
+        weekNumRule.value = data.weekNumRule;
       }
       if (data.showWeekNum !== undefined) {
         showWeekNum.value = Boolean(data.showWeekNum);
@@ -179,6 +185,7 @@ export default class ArcoCalendarPlugin extends Plugin {
     const settingsSnapshot = {
       position: position.value,
       weekStart: weekStart.value,
+      weekNumRule: weekNumRule.value,
       showWeekNum: showWeekNum.value,
       weeklyEnabled: weeklyEnabled.value,
       autoCreateWeekly: autoCreateWeekly.value,
@@ -202,6 +209,7 @@ export default class ArcoCalendarPlugin extends Plugin {
       settingsRestored = true;
       position.value = settingsSnapshot.position;
       weekStart.value = settingsSnapshot.weekStart;
+      weekNumRule.value = settingsSnapshot.weekNumRule;
       showWeekNum.value = settingsSnapshot.showWeekNum;
       weeklyEnabled.value = settingsSnapshot.weeklyEnabled;
       autoCreateWeekly.value = settingsSnapshot.autoCreateWeekly;
@@ -332,6 +340,7 @@ export default class ArcoCalendarPlugin extends Plugin {
     const saveObj: any = {
       position: position.value,
       weekStart: Number(weekStart.value),
+      weekNumRule: weekNumRule.value === 'iso' ? 'iso' : 'calendar',
       showWeekNum: showWeekNum.value,
       weeklyEnabled: weeklyEnabledValue,
       autoCreateWeekly: Boolean(autoCreateWeekly.value),

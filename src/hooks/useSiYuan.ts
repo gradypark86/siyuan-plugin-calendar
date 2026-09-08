@@ -1,5 +1,6 @@
-import { ref, shallowRef } from 'vue';
+import { ref, shallowRef, computed } from 'vue';
 import type { App, I18N, EventBus } from 'siyuan';
+import type { CusNotebook } from '@/utils/notebook';
 
 // SiYuan runtime instances use private methods and cannot be wrapped by Vue proxies.
 export const app = shallowRef<App>({ plugins: [], appId: '' });
@@ -10,8 +11,16 @@ export const isMobile = ref<boolean>(false);
 
 export const eventBus = shallowRef<EventBus>();
 
+export const currentNotebook = shallowRef<CusNotebook | undefined>(undefined);
+
 export const position = ref();
 export const weekStart = ref<number>(1);
+/** Week-numbering rule: 'calendar' (week containing Jan 1 is week 1) or 'iso' (ISO 8601). Default keeps historical behavior. */
+export const weekNumRule = ref<'calendar' | 'iso'>('calendar');
+/** ISO 8601 assumes Monday-start weeks, so it only takes effect when weekStart is 1. */
+export const effectiveWeekRule = computed<'calendar' | 'iso'>(() =>
+  weekNumRule.value === 'iso' && weekStart.value === 1 ? 'iso' : 'calendar'
+);
 export const showWeekNum = ref<boolean>(false);
 export const weeklyEnabled = ref<boolean>(false);
 export const autoCreateWeekly = ref<boolean>(false);

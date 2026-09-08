@@ -34,7 +34,7 @@ import CalendarView from '@/components/CalendarView.vue';
 import { Constants } from 'siyuan';
 import { lsNotebooks, request, pushErrMsg } from '@/api/api';
 import { useLocale, formatMsg } from '@/hooks/useLocale';
-import { eventBus, i18n, weekStart } from '@/hooks/useSiYuan';
+import { eventBus, i18n, weekStart, currentNotebook } from '@/hooks/useSiYuan';
 import { CusNotebook } from '@/utils/notebook';
 import { refreshSql } from './api/utils';
 
@@ -79,6 +79,12 @@ updateDayjsLocale();
 const cusNotebooks = ref<CusNotebook[]>([]);
 const selectNotebookId = ref<NotebookId | undefined>(undefined);
 const selectNotebook = computed(() => cusNotebooks.value.find(book => book.id === selectNotebookId.value));
+
+// Sync selectNotebook to global state so other components (e.g. settings panel) can access it
+watch(selectNotebook, (nb) => {
+  currentNotebook.value = nb;
+}, { immediate: true });
+
 const panelRootRef = ref<HTMLElement | null>(null);
 const dropdownWheelCleanupFns: Array<() => void> = [];
 let initToken = 0;
@@ -131,10 +137,11 @@ function handleNotebookDropdownVisibleChange(visible: boolean) {
 
 async function init() {
   const token = ++initToken;
-  const [{ notebooks }, storage] = await Promise.all([
+  const [nbRes, storage] = await Promise.all([
     lsNotebooks(),
     request('/api/storage/getLocalStorage'),
   ]);
+  const notebooks = nbRes?.notebooks ?? [];
   const books = notebooks.filter((book: Notebook) => !book.closed);
   const loadedNotebooks = await Promise.all(books.map(book => CusNotebook.build(book)));
   if (disposed || token !== initToken) return;

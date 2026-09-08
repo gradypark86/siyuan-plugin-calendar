@@ -12,6 +12,7 @@ A SiYuan Note calendar panel plugin that allows quick creation of periodic notes
   - Optional button entry location
   - Optional display of week numbers
   - Optional start day of the week (Sunday/Monday)
+  - Optional week number rule (calendar week / ISO 8601, under Advanced settings; switching rules does not affect existing weekly notes)
   - Adaptive width scaling in sidebar mode
   - Click on a date to quickly create or jump to that day's daily note
   - Support switching between multiple notebooks
@@ -21,6 +22,7 @@ A SiYuan Note calendar panel plugin that allows quick creation of periodic notes
 - Custom Configuration
   - Configure the time when a new day begins
 - Support for all platforms
+- Since v0.5.0, periodic notes created through the panel automatically get document attributes. The panel looks up attributes first and falls back to the storage path when none exist. Before changing the storage path or the week-number rule, use "Backfill Attributes" under Advanced Settings to add attributes to periodic notes created before v0.5.0, so the panel can still find existing weekly notes instead of creating blank ones.
 
 ## References and Thanks
 

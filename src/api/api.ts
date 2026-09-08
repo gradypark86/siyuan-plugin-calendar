@@ -260,7 +260,8 @@ export async function sql(sql: string): Promise<Block[] | []> {
 }
 
 export async function getBlockByID(blockId: string): Promise<Block> {
-  const sqlScript = `select * from blocks where id ='${blockId}'`;
+  const safeId = blockId.replace(/'/g, "''");
+  const sqlScript = `select * from blocks where id ='${safeId}'`;
   const data = await sql(sqlScript);
   return data[0];
 }

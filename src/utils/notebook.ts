@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 import * as api from '@/api/api';
-import { setCustomDNAttr } from '@/api/daily-note';
+import { setCustomDNAttr, setCustomWeeklyAttr, setCustomMonthlyAttr, setCustomYearlyAttr } from '@/api/daily-note';
 import {
   weeklyEnabled,
   weeklyPath,
@@ -12,10 +12,11 @@ import {
   yearlyPath,
   yearlyTemplatePath,
   weekStart,
+  effectiveWeekRule,
   autoCreateWeekly,
   autoCreateWeeklyForced,
 } from '@/hooks/useSiYuan';
-import { getCalendarWeekNum } from '@/utils/weekNum';
+import { getCalendarWeekNum, getWeekInfo, getWeekIsoKey } from '@/utils/weekNum';
 
 function isPathInTemplatesDir(filePath: string, templatesDir: string): boolean {
   const normalize = (value: string) => value.replace(/\\/g, '/').replace(/\/+$/, '');
@@ -101,14 +102,22 @@ export class CusNotebook implements Notebook, NotebookConf {
     // 当前日期已有日记却无文档属性，设置后返回日记
     if (existingId) {
       const id = existingId;
-      setCustomDNAttr(id, date); //为新建的日记添加自定义属性
+      try {
+        await setCustomDNAttr(id, date); //为新建的日记添加自定义属性
+      } catch (e) {
+        // attribute writing is best-effort
+      }
       return { id, dateStr };
     }
     // 当前日期无日记，创建日记
     const docID = await api.createDocWithMd(this.id, hPath, '');
     // 根据模板渲染日记
     await this.applyTemplate(docID, this.dailyNoteTemplatePath);
-    setCustomDNAttr(docID, date); //为新建的日记添加自定义属性
+    try {
+      await setCustomDNAttr(docID, date); //为新建的日记添加自定义属性
+    } catch (e) {
+      // attribute writing is best-effort
+    }
     return { id: docID, dateStr };
   }
 
@@ -215,33 +224,128 @@ export class CusNotebook implements Notebook, NotebookConf {
     }
   }
 
-  async getWeeklySavePath(date: Date, weekNum: number) {
+  /**
+   * Representative day of the week row containing `date` (weekStart + 3, i.e.
+   * the Thursday when the week starts on Monday). Used for weekly paths so the
+   * {{now | date "2006"}} year matches the ISO year of the week.
+   */
+  private getWeeklyRepDay(date: Date): Date {
+    const start = ((Number(weekStart.value) % 7) + 7) % 7;
+    const d = dayjs(date);
+    const daysFromStart = (d.day() - start + 7) % 7;
+    return d.subtract(daysFromStart, 'day').add(3, 'day').toDate();
+  }
+
+  /**
+   * Canonical weekly path under the active numbering rule, rendered with the
+   * week's representative day (Thursday for Monday-start weeks).
+   */
+  private async getWeeklyCanonicalPath(date: Date): Promise<string> {
     const pathPattern = String(weeklyPath.value || '').trim();
     if (!pathPattern) {
       throw new Error('weeklyPath is required when weekly notes are enabled');
     }
-    return this.renderPathPattern(pathPattern, date, {
-      weekly: weekNum,
-      month: dayjs(date).format('MM'),
-      monthly: dayjs(date).format('YYYY-MM'),
-      year: dayjs(date).format('YYYY'),
-      yearly: dayjs(date).format('YYYY'),
+    const repDay = this.getWeeklyRepDay(date);
+    const info = getWeekInfo(repDay, effectiveWeekRule.value, Number(weekStart.value));
+    return this.renderPathPattern(pathPattern, repDay, {
+      weekly: info.week,
+      month: dayjs(repDay).format('MM'),
+      monthly: dayjs(repDay).format('YYYY-MM'),
+      year: info.year,
+      yearly: info.year,
     });
   }
 
-  async getExistWeeklyNote(date: Date, weekNum: number): Promise<string | undefined> {
-    const hPath = await this.getWeeklySavePath(date, weekNum);
-    return this.getDocIdByHPath(hPath);
+  /**
+   * Paths old versions could have produced for the week containing `date`.
+   * Old builds always used the calendar-week numbering and rendered with the
+   * triggering date (the daily-note date on auto-create, or the row's middle
+   * day when clicking). A 7-day week covers at most two calendar (year, month)
+   * bases, so there are at most two legacy paths.
+   */
+  private async getWeeklyLegacyPaths(date: Date): Promise<string[]> {
+    const pathPattern = String(weeklyPath.value || '').trim();
+    if (!pathPattern) return [];
+
+    const start = ((Number(weekStart.value) % 7) + 7) % 7;
+    const d = dayjs(date);
+    const weekStartDay = d.subtract((d.day() - start + 7) % 7, 'day');
+
+    const bases: Array<{ rep: Date; weekly: number }> = [];
+    const seen = new Set<string>();
+    for (let i = 0; i < 7; i++) {
+      const day = weekStartDay.add(i, 'day');
+      const key = day.format('YYYY-MM');
+      if (seen.has(key)) continue;
+      seen.add(key);
+      bases.push({ rep: day.toDate(), weekly: getCalendarWeekNum(day.toDate(), start) });
+    }
+
+    const paths: string[] = [];
+    for (const base of bases) {
+      paths.push(
+        await this.renderPathPattern(pathPattern, base.rep, {
+          weekly: base.weekly,
+          month: dayjs(base.rep).format('MM'),
+          monthly: dayjs(base.rep).format('YYYY-MM'),
+          year: dayjs(base.rep).year(),
+          yearly: dayjs(base.rep).year(),
+        })
+      );
+    }
+    return paths;
   }
 
-  async createWeeklyNote(date: Date, weekNum: number): Promise<string> {
-    const hPath = await this.getWeeklySavePath(date, weekNum);
+  /** Ordered candidate paths for the week containing `date`: canonical first, then legacy. */
+  private async getWeeklyCandidates(date: Date): Promise<string[]> {
+    const seen = new Set<string>();
+    const candidates: string[] = [];
+    const push = (p: string) => {
+      if (p && !seen.has(p)) {
+        seen.add(p);
+        candidates.push(p);
+      }
+    };
+    try {
+      push(await this.getWeeklyCanonicalPath(date));
+    } catch (e) {
+      // path may be empty/disabled; legacy candidates still apply
+    }
+    for (const p of await this.getWeeklyLegacyPaths(date)) {
+      push(p);
+    }
+    return candidates;
+  }
+
+  async getWeeklySavePath(date: Date): Promise<string> {
+    return this.getWeeklyCanonicalPath(date);
+  }
+
+  async getExistWeeklyNote(date: Date): Promise<string | undefined> {
+    // Attribute identity is rule-independent and survives path edits. Check it first.
+    const attrId = await this.getDocIdByWeeklyAttr(getWeekIsoKey(date, Number(weekStart.value)));
+    if (attrId) return attrId;
+
+    // Fallback to path-based lookup (canonical + legacy) for notes created before attributes were added.
+    for (const p of await this.getWeeklyCandidates(date)) {
+      const found = await this.getDocIdByHPath(p);
+      if (found) {
+        // Backfill attribute for old notes found via path so future lookups are faster.
+        await this.setWeeklyNoteAttr(found, date);
+        return found;
+      }
+    }
+    return undefined;
+  }
+
+  async createWeeklyNote(date: Date): Promise<string> {
+    const hPath = await this.getWeeklyCanonicalPath(date);
     const inFlight = this.weeklyCreationLocks.get(hPath);
     if (inFlight) {
       return inFlight;
     }
 
-    const operation = this.createWeeklyNoteOnce(hPath);
+    const operation = this.createWeeklyNoteOnce(hPath, date);
     this.weeklyCreationLocks.set(hPath, operation);
     try {
       return await operation;
@@ -252,10 +356,102 @@ export class CusNotebook implements Notebook, NotebookConf {
     }
   }
 
-  private async hasWeeklyPathOverlap(date: Date, weekNum: number): Promise<boolean> {
+  private async getDocIdByWeeklyAttr(weekKey: string): Promise<string | undefined> {
+    const attrName = `custom-calendar-weekly-${weekKey}`;
+    const results = await api.sql(
+      `SELECT id FROM blocks WHERE type='d' AND box = '${this.id}' AND id IN (SELECT block_id FROM attributes WHERE name = '${attrName}')`
+    );
+    if (results && results.length > 0) {
+      return results[0].id;
+    }
+    return undefined;
+  }
+
+  /**
+   * Batch lookup of weekly notes by attribute for a given month range.
+   * Returns a map of weekKey -> docId for all weeks found.
+   */
+  async getExistWeeklyNotesByKeys(weekKeys: string[]): Promise<Map<string, string>> {
+    if (weekKeys.length === 0) return new Map();
+    const attrNames = weekKeys.map(k => `custom-calendar-weekly-${k}`);
+    const attrList = attrNames.map(n => `'${n}'`).join(',');
+    const results = await api.sql(
+      `SELECT b.id, a.name FROM blocks b
+       INNER JOIN attributes a ON b.id = a.block_id
+       WHERE b.type='d' AND b.box='${this.id}' AND a.name IN (${attrList})`
+    );
+    const map = new Map<string, string>();
+    if (results && results.length > 0) {
+      for (const row of results) {
+        const match = row.name?.match(/^custom-calendar-weekly-(.+)$/);
+        if (match && row.id) {
+          map.set(match[1], row.id);
+        }
+      }
+    }
+    return map;
+  }
+
+  private async setWeeklyNoteAttr(docID: string, date: Date): Promise<void> {
+    try {
+      await setCustomWeeklyAttr(docID, getWeekIsoKey(date, Number(weekStart.value)));
+    } catch (e) {
+      // attribute writing is best-effort
+    }
+  }
+
+  private async createWeeklyNoteOnce(hPath: string, date: Date): Promise<string> {
+    // Attribute is the source of truth. If a doc with this week's attribute exists
+    // (even under a different path), reuse it instead of creating a duplicate.
+    const weekKey = getWeekIsoKey(date, Number(weekStart.value));
+    const attrId = await this.getDocIdByWeeklyAttr(weekKey);
+    if (attrId) {
+      await this.applyTemplateIfDocEmpty(attrId, weeklyTemplatePath.value);
+      return attrId;
+    }
+
+    // No doc with the attribute exists. Check if a doc exists at the current canonical path.
+    const existingId = await this.getDocIdByHPath(hPath);
+    if (existingId) {
+      // Doc exists at the current path but has no attribute. Check if it already has
+      // a DIFFERENT weekly attribute (e.g. user manually moved it or changed config).
+      const attrs = await api.getBlockAttrs(existingId);
+      const hasOtherWeekly = Object.keys(attrs).some(k => k.startsWith('custom-calendar-weekly-') && k !== `custom-calendar-weekly-${weekKey}`);
+      if (hasOtherWeekly) {
+        // This doc belongs to a different week. Create a new doc for this week.
+        const newId = await api.createDocWithMd(this.id, hPath, '');
+        await this.applyTemplate(newId, weeklyTemplatePath.value);
+        await this.setWeeklyNoteAttr(newId, date);
+        return newId;
+      }
+      // Doc has no weekly attribute or has the correct one. Backfill template and attribute.
+      await this.applyTemplateIfDocEmpty(existingId, weeklyTemplatePath.value);
+      await this.setWeeklyNoteAttr(existingId, date);
+      return existingId;
+    }
+
+    // Check legacy paths (old naming conventions) before creating a new doc.
+    for (const p of await this.getWeeklyLegacyPaths(date)) {
+      if (p === hPath) continue; // already checked above
+      const legacyId = await this.getDocIdByHPath(p);
+      if (legacyId) {
+        await this.applyTemplateIfDocEmpty(legacyId, weeklyTemplatePath.value);
+        await this.setWeeklyNoteAttr(legacyId, date);
+        return legacyId;
+      }
+    }
+
+    // No existing doc found. Create a new one at the canonical path.
+    const docID = await api.createDocWithMd(this.id, hPath, '');
+    await this.applyTemplate(docID, weeklyTemplatePath.value);
+    await this.setWeeklyNoteAttr(docID, date);
+    return docID;
+  }
+
+  private async hasWeeklyPathOverlap(date: Date): Promise<boolean> {
     if (!weeklyEnabled.value || !String(weeklyPath.value || '').trim()) return false;
     try {
-      const [dailyPath, weeklyNotePath] = await Promise.all([this.getSavePath(date), this.getWeeklySavePath(date, weekNum)]);
+      const [dailyPath, weeklyNotePath] = await Promise.all([this.getSavePath(date), this.getWeeklyCanonicalPath(date)]);
       const normalize = (value: string) => `/${String(value || '').replace(/\\/g, '/').replace(/^\/+|\/+$/g, '')}`;
       const daily = normalize(dailyPath);
       const weekly = normalize(weeklyNotePath);
@@ -265,25 +461,12 @@ export class CusNotebook implements Notebook, NotebookConf {
     }
   }
 
-  async refreshWeeklyPathOverlap(date: Date, weekNum?: number): Promise<boolean> {
-    const num = weekNum != null && Number.isFinite(Number(weekNum)) ? Number(weekNum) : getCalendarWeekNum(date, Number(weekStart.value));
-    autoCreateWeeklyForced.value = await this.hasWeeklyPathOverlap(date, num);
+  async refreshWeeklyPathOverlap(date: Date): Promise<boolean> {
+    autoCreateWeeklyForced.value = await this.hasWeeklyPathOverlap(date);
     if (autoCreateWeeklyForced.value) {
       autoCreateWeekly.value = true;
     }
     return autoCreateWeeklyForced.value;
-  }
-
-  private async createWeeklyNoteOnce(hPath: string): Promise<string> {
-    const existingId = await this.getDocIdByHPath(hPath);
-    if (existingId) {
-      await this.applyTemplateIfDocEmpty(existingId, weeklyTemplatePath.value);
-      return existingId;
-    }
-
-    const docID = await api.createDocWithMd(this.id, hPath, '');
-    await this.applyTemplate(docID, weeklyTemplatePath.value);
-    return docID;
   }
 
   async getMonthlySavePath(date: Date) {
@@ -311,7 +494,7 @@ export class CusNotebook implements Notebook, NotebookConf {
       return inFlight;
     }
 
-    const operation = this.createMonthlyNoteOnce(hPath);
+    const operation = this.createMonthlyNoteOnce(hPath, date);
     this.monthlyCreationLocks.set(hPath, operation);
     try {
       return await operation;
@@ -322,15 +505,39 @@ export class CusNotebook implements Notebook, NotebookConf {
     }
   }
 
-  private async createMonthlyNoteOnce(hPath: string): Promise<string> {
+  private async createMonthlyNoteOnce(hPath: string, date: Date): Promise<string> {
+    // Attribute is the source of truth. If a doc with this month's attribute exists, reuse it.
+    const monthKey = dayjs(date).format('YYYYMM');
+    const attrName = `custom-calendar-monthly-${monthKey}`;
+    const results = await api.sql(
+      `SELECT id FROM blocks WHERE type='d' AND box = '${this.id}' AND id IN (SELECT block_id FROM attributes WHERE name = '${attrName}')`
+    );
+    if (results && results.length > 0) {
+      const attrId = results[0].id;
+      await this.applyTemplateIfDocEmpty(attrId, monthlyTemplatePath.value);
+      return attrId;
+    }
+
+    // No doc with the attribute exists. Check if a doc exists at the current path.
     const existingId = await this.getDocIdByHPath(hPath);
     if (existingId) {
+      const attrs = await api.getBlockAttrs(existingId);
+      const hasOtherMonthly = Object.keys(attrs).some(k => k.startsWith('custom-calendar-monthly-') && k !== attrName);
+      if (hasOtherMonthly) {
+        // This doc belongs to a different month. Create a new doc for this month.
+        const newId = await api.createDocWithMd(this.id, hPath, '');
+        await this.applyTemplate(newId, monthlyTemplatePath.value);
+        await setCustomMonthlyAttr(newId, monthKey);
+        return newId;
+      }
       await this.applyTemplateIfDocEmpty(existingId, monthlyTemplatePath.value);
+      await setCustomMonthlyAttr(existingId, monthKey);
       return existingId;
     }
 
     const docID = await api.createDocWithMd(this.id, hPath, '');
     await this.applyTemplate(docID, monthlyTemplatePath.value);
+    await setCustomMonthlyAttr(docID, monthKey);
     return docID;
   }
 
@@ -357,7 +564,7 @@ export class CusNotebook implements Notebook, NotebookConf {
       return inFlight;
     }
 
-    const operation = this.createYearlyNoteOnce(hPath);
+    const operation = this.createYearlyNoteOnce(hPath, date);
     this.yearlyCreationLocks.set(hPath, operation);
     try {
       return await operation;
@@ -368,19 +575,43 @@ export class CusNotebook implements Notebook, NotebookConf {
     }
   }
 
-  private async createYearlyNoteOnce(hPath: string): Promise<string> {
+  private async createYearlyNoteOnce(hPath: string, date: Date): Promise<string> {
+    // Attribute is the source of truth. If a doc with this year's attribute exists, reuse it.
+    const yearKey = dayjs(date).format('YYYY');
+    const attrName = `custom-calendar-yearly-${yearKey}`;
+    const results = await api.sql(
+      `SELECT id FROM blocks WHERE type='d' AND box = '${this.id}' AND id IN (SELECT block_id FROM attributes WHERE name = '${attrName}')`
+    );
+    if (results && results.length > 0) {
+      const attrId = results[0].id;
+      await this.applyTemplateIfDocEmpty(attrId, yearlyTemplatePath.value);
+      return attrId;
+    }
+
+    // No doc with the attribute exists. Check if a doc exists at the current path.
     const existingId = await this.getDocIdByHPath(hPath);
     if (existingId) {
+      const attrs = await api.getBlockAttrs(existingId);
+      const hasOtherYearly = Object.keys(attrs).some(k => k.startsWith('custom-calendar-yearly-') && k !== attrName);
+      if (hasOtherYearly) {
+        // This doc belongs to a different year. Create a new doc for this year.
+        const newId = await api.createDocWithMd(this.id, hPath, '');
+        await this.applyTemplate(newId, yearlyTemplatePath.value);
+        await setCustomYearlyAttr(newId, yearKey);
+        return newId;
+      }
       await this.applyTemplateIfDocEmpty(existingId, yearlyTemplatePath.value);
+      await setCustomYearlyAttr(existingId, yearKey);
       return existingId;
     }
 
     const docID = await api.createDocWithMd(this.id, hPath, '');
     await this.applyTemplate(docID, yearlyTemplatePath.value);
+    await setCustomYearlyAttr(docID, yearKey);
     return docID;
   }
 
-  async ensurePeriodNotes(date: Date, weekNum?: number, includeWeekly = true): Promise<void> {
+  async ensurePeriodNotes(date: Date, includeWeekly = true): Promise<void> {
     // Create yearly/monthly first so their paths can safely be parents of daily paths
     // (e.g. yearly: /daily note/{{now | date "2006"}}, monthly: /daily note/{{now | date "2006/01"}}/...)
     if (yearlyEnabled.value) {
@@ -393,10 +624,196 @@ export class CusNotebook implements Notebook, NotebookConf {
     // auto-create that parent as an empty shell without the weekly template.
     // Ensure weekly here (create or backfill template if empty) so path overlap
     // does not permanently skip weekly template rendering.
-    const num = weekNum != null && Number.isFinite(Number(weekNum)) ? Number(weekNum) : getCalendarWeekNum(date, Number(weekStart.value));
-    await this.refreshWeeklyPathOverlap(date, num);
+    await this.refreshWeeklyPathOverlap(date);
     if ((includeWeekly || autoCreateWeeklyForced.value) && weeklyEnabled.value && String(weeklyPath.value || '').trim()) {
-      await this.createWeeklyNote(date, num);
+      await this.createWeeklyNote(date);
     }
+  }
+
+  /**
+   * Scan all documents in the notebook and backfill missing periodic note attributes.
+   * Only processes documents whose hpath matches the configured path patterns.
+   * Returns counts of { weekly, monthly, yearly } notes backfilled.
+   */
+  async backfillPeriodicNoteAttrs(): Promise<{ weekly: number; monthly: number; yearly: number }> {
+    const counts = { weekly: 0, monthly: 0, yearly: 0 };
+
+    // One JOIN query fetches every doc together with its periodic-note
+    // attributes, so no per-document getBlockAttrs round-trips are needed.
+    const rows = await api.sql(
+      `SELECT b.id, b.hpath, a.name AS attr_name, a.value AS attr_value FROM blocks b
+       LEFT JOIN attributes a ON b.id = a.block_id
+       WHERE b.type='d' AND b.box='${this.id}' AND (a.name LIKE 'custom-calendar-%' OR a.name IS NULL)
+       ORDER BY b.hpath`
+    );
+    if (!rows || rows.length === 0) return counts;
+
+    const docAttrs = new Map<string, { hpath: string; attrs: Record<string, string> }>();
+    for (const raw of rows) {
+      const row = raw as any;
+      const id = String(row.id);
+      if (!docAttrs.has(id)) {
+        docAttrs.set(id, { hpath: String(row.hpath || ''), attrs: {} });
+      }
+      if (row.attr_name) {
+        docAttrs.get(id)!.attrs[String(row.attr_name)] = String(row.attr_value ?? '');
+      }
+    }
+
+    const weeklyPattern = String(weeklyPath.value || '').trim();
+    const monthlyPattern = String(monthlyPath.value || '').trim();
+    const yearlyPattern = String(yearlyPath.value || '').trim();
+
+    // Extract base directories (the static prefix before template variables)
+    const weeklyBase = this.extractBaseDir(weeklyPattern);
+    const monthlyBase = this.extractBaseDir(monthlyPattern);
+    const yearlyBase = this.extractBaseDir(yearlyPattern);
+
+    // Collect all existing period keys to avoid creating duplicates.
+    const existingWeeklyKeys = new Set<string>();
+    const existingMonthlyKeys = new Set<string>();
+    const existingYearlyKeys = new Set<string>();
+    for (const { attrs } of docAttrs.values()) {
+      for (const key of Object.keys(attrs)) {
+        if (key.startsWith('custom-calendar-weekly-')) {
+          existingWeeklyKeys.add(key.slice('custom-calendar-weekly-'.length));
+        } else if (key.startsWith('custom-calendar-monthly-')) {
+          existingMonthlyKeys.add(key.slice('custom-calendar-monthly-'.length));
+        } else if (key.startsWith('custom-calendar-yearly-')) {
+          existingYearlyKeys.add(key.slice('custom-calendar-yearly-'.length));
+        }
+      }
+    }
+
+    const activeRule = effectiveWeekRule.value;
+
+    // Backfill docs that match the path pattern and don't conflict with existing periods.
+    for (const [id, { hpath, attrs }] of docAttrs.entries()) {
+      if (!hpath) continue;
+
+      const hasWeekly = Object.keys(attrs).some(k => k.startsWith('custom-calendar-weekly-'));
+      const hasMonthly = Object.keys(attrs).some(k => k.startsWith('custom-calendar-monthly-'));
+      const hasYearly = Object.keys(attrs).some(k => k.startsWith('custom-calendar-yearly-'));
+
+      // Try to match against weekly pattern
+      if (!hasWeekly && weeklyPattern) {
+        // If weeklyBase is null, the path is fully dynamic - use regex-based detection
+        const pathMatches = weeklyBase === null || hpath.startsWith(weeklyBase);
+        if (pathMatches) {
+          const weekKey = this.extractWeekKeyFromPath(hpath, activeRule);
+          if (weekKey && !existingWeeklyKeys.has(weekKey)) {
+            await setCustomWeeklyAttr(id, weekKey);
+            existingWeeklyKeys.add(weekKey); // prevent duplicates within this run
+            counts.weekly++;
+          }
+        }
+      }
+
+      // Monthly pattern
+      if (!hasMonthly && monthlyPattern) {
+        const pathMatches = monthlyBase === null || hpath.startsWith(monthlyBase);
+        if (pathMatches) {
+          const monthKey = this.extractMonthKeyFromPath(hpath);
+          if (monthKey && !existingMonthlyKeys.has(monthKey)) {
+            await setCustomMonthlyAttr(id, monthKey);
+            existingMonthlyKeys.add(monthKey);
+            counts.monthly++;
+          }
+        }
+      }
+
+      // Yearly pattern
+      if (!hasYearly && yearlyPattern) {
+        const pathMatches = yearlyBase === null || hpath.startsWith(yearlyBase);
+        if (pathMatches) {
+          const yearKey = this.extractYearKeyFromPath(hpath);
+          if (yearKey && !existingYearlyKeys.has(yearKey)) {
+            await setCustomYearlyAttr(id, yearKey);
+            existingYearlyKeys.add(yearKey);
+            counts.yearly++;
+          }
+        }
+      }
+    }
+
+    return counts;
+  }
+
+  /**
+   * Extract the base directory from a path pattern by removing template variables.
+   * E.g. "/Daily Notes/{{now | date "2006/01"}}/{{now | date "2006"}}-W{{weekly}}"
+   *      -> "/Daily Notes"
+   * If the pattern starts with a template variable (fully dynamic), returns null
+   * to signal that path filtering should be skipped.
+   */
+  private extractBaseDir(pattern: string): string | null {
+    if (!pattern) return null;
+    // Find the first template variable {{...}} and return everything before it
+    const match = pattern.match(/^([^{]*)/);
+    if (match && match[1] && match[1].trim()) {
+      // Normalize: remove surrounding slashes; if only a bare "/" remains there
+      // is no real static prefix (e.g. "/{{ ... }}" fully dynamic paths).
+      const cleaned = match[1].trim().replace(/^\/+|\/+$/g, '');
+      if (!cleaned) return null;
+      return '/' + cleaned;
+    }
+    // Pattern starts with {{ or is fully dynamic - no static prefix
+    return null;
+  }
+
+  private extractWeekKeyFromPath(hpath: string, rule: 'calendar' | 'iso'): string | null {
+    // Method 1: YYYY-W## format. Only trust the number as an ISO week key when the
+    // ISO rule is active. Under the calendar rule the number in the path is a
+    // calendar week number which cannot be reliably mapped to an ISO key from the
+    // path alone (e.g. the cross-year week renders as /2026-W1 but its ISO key is
+    // 202653). Such notes are still backfilled correctly when opened via the
+    // path fallback in getExistWeeklyNote.
+    if (rule === 'iso') {
+      const weekMatch = hpath.match(/(\d{4})-w(\d{1,2})/i);
+      if (weekMatch) {
+        const year = weekMatch[1];
+        const week = weekMatch[2].padStart(2, '0');
+        return `${year}${week}`;
+      }
+    }
+
+    // Method 2: Extract from date range format like /2026/202608/0810-0816
+    // Pattern: YYYY/YYYYMM/MMDD-MMDD (path contains an explicit start date, so the
+    // ISO key can be derived unambiguously regardless of the numbering rule).
+    const rangeMatch = hpath.match(/\/(\d{4})\/\d{6}\/(\d{2})(\d{2})-(\d{2})(\d{2})/);
+    if (rangeMatch) {
+      const year = parseInt(rangeMatch[1], 10);
+      const startMonth = parseInt(rangeMatch[2], 10);
+      const startDay = parseInt(rangeMatch[3], 10);
+      // Use the start date of the range to compute the week
+      try {
+        const date = new Date(year, startMonth - 1, startDay);
+        if (!isNaN(date.getTime())) {
+          return getWeekIsoKey(date, Number(weekStart.value));
+        }
+      } catch (e) {
+        // invalid date, skip
+      }
+    }
+
+    return null;
+  }
+
+  private extractMonthKeyFromPath(hpath: string): string | null {
+    // Extract YYYYMM from paths like /Daily Notes/2026-12 or /2026/12
+    const match = hpath.match(/(\d{4})[-\/](\d{2})(?![-\/]\d)/);
+    if (match) {
+      return `${match[1]}${match[2]}`;
+    }
+    return null;
+  }
+
+  private extractYearKeyFromPath(hpath: string): string | null {
+    // Extract YYYY from paths like /Daily Notes/2026 (but not /2026/12 or /2026-12-01)
+    const match = hpath.match(/\/(\d{4})$/);
+    if (match) {
+      return match[1];
+    }
+    return null;
   }
 }

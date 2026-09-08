@@ -31,13 +31,74 @@ export function formatDate(date?: Date, sep=''): string {
  * @Ref https://github.com/siyuan-note/siyuan/issues/9807
  * @param doc_id 日记的 id
  */
-export function setCustomDNAttr(doc_id: string, date?: Date) {
+export function setCustomDNAttr(doc_id: string, date?: Date): Promise<unknown> {
     const td = formatDate(date);
     const attr = `custom-dailynote-${td}`;
     // 构建 attr: td
     const attrs: { [key: string]: string } = {};
     attrs[attr] = td;
-    serverApi.setBlockAttrs(doc_id, attrs);
+    return serverApi.setBlockAttrs(doc_id, attrs);
+}
+
+/**
+ * 通用自定义属性写入，供周期笔记使用：
+ * - custom-calendar-weekly-<YYYYWW>: 周记（YYYYWW 为周的 ISO 标识，如 202653）
+ * - custom-calendar-monthly-<YYYYMM>: 月记
+ * - custom-calendar-yearly-<YYYY>:   年记
+ *
+ * If the document already has a different attribute of the same type (e.g. two monthly keys),
+ * remove the old one first to keep attributes clean.
+ */
+export async function setCustomAttr(doc_id: string, name: string, value: string): Promise<unknown> {
+    const attrs: { [key: string]: string } = {};
+    attrs[name] = value;
+    return serverApi.setBlockAttrs(doc_id, attrs);
+}
+
+export async function setCustomWeeklyAttr(doc_id: string, weekKey: string): Promise<unknown> {
+    const attrName = `custom-calendar-weekly-${weekKey}`;
+    // Check if the doc already has a different weekly attribute and remove it
+    try {
+        const existing = await serverApi.getBlockAttrs(doc_id);
+        for (const key of Object.keys(existing)) {
+            if (key.startsWith('custom-calendar-weekly-') && key !== attrName) {
+                await serverApi.setBlockAttrs(doc_id, { [key]: '' }); // empty value removes the attr
+            }
+        }
+    } catch (e) {
+        // ignore if getBlockAttrs fails
+    }
+    return setCustomAttr(doc_id, attrName, weekKey);
+}
+
+export async function setCustomMonthlyAttr(doc_id: string, monthKey: string): Promise<unknown> {
+    const attrName = `custom-calendar-monthly-${monthKey}`;
+    try {
+        const existing = await serverApi.getBlockAttrs(doc_id);
+        for (const key of Object.keys(existing)) {
+            if (key.startsWith('custom-calendar-monthly-') && key !== attrName) {
+                await serverApi.setBlockAttrs(doc_id, { [key]: '' });
+            }
+        }
+    } catch (e) {
+        // ignore
+    }
+    return setCustomAttr(doc_id, attrName, monthKey);
+}
+
+export async function setCustomYearlyAttr(doc_id: string, yearKey: string): Promise<unknown> {
+    const attrName = `custom-calendar-yearly-${yearKey}`;
+    try {
+        const existing = await serverApi.getBlockAttrs(doc_id);
+        for (const key of Object.keys(existing)) {
+            if (key.startsWith('custom-calendar-yearly-') && key !== attrName) {
+                await serverApi.setBlockAttrs(doc_id, { [key]: '' });
+            }
+        }
+    } catch (e) {
+        // ignore
+    }
+    return setCustomAttr(doc_id, attrName, yearKey);
 }
 
 
