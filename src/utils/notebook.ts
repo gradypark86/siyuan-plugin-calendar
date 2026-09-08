@@ -687,6 +687,101 @@ export class CusNotebook implements Notebook, NotebookConf {
 
     const activeRule = effectiveWeekRule.value;
 
+    // First try the same date-to-path lookup used by the calendar itself. This
+    // is more reliable than extracting values from arbitrary filenames and
+    // covers notes created since the plugin was first published. Start from the
+    // complete week containing 2025-01-01 so the boundary week is included,
+    // and continue through the complete current week.
+    if (weeklyPattern) {
+      const startDay = ((Number(weekStart.value) % 7) + 7) % 7;
+      const firstDate = dayjs('2025-01-01');
+      const daysToSubtract = (firstDate.day() - startDay + 7) % 7;
+      let cursor = firstDate.subtract(daysToSubtract, 'day').startOf('day');
+      const today = dayjs().startOf('day');
+      const daysToAdd = (startDay + 6 - today.day() + 7) % 7;
+      const lastDate = today.add(daysToAdd, 'day');
+
+      while (cursor.valueOf() <= lastDate.valueOf()) {
+        // Any date in the row is sufficient; use its representative day to
+        // make the intended weekly identity explicit.
+        const repDay = cursor.add(3, 'day');
+        const weekKey = getWeekIsoKey(repDay.toDate(), startDay);
+
+        if (!existingWeeklyKeys.has(weekKey)) {
+          try {
+            // getExistWeeklyNote checks attributes first, then canonical and
+            // legacy paths. A path hit also performs best-effort backfilling.
+            const docID = await this.getExistWeeklyNote(repDay.toDate());
+            if (docID && !existingWeeklyKeys.has(weekKey)) {
+              // Ensure the write is completed before recording the key/count.
+              // This is normally already done by getExistWeeklyNote's path
+              // fallback, but keeping it here also handles older implementations
+              // of CusNotebook and makes the backfill result deterministic.
+              await setCustomWeeklyAttr(docID, weekKey);
+              existingWeeklyKeys.add(weekKey);
+              counts.weekly++;
+            }
+          } catch (e) {
+            // Continue with the regex fallback if an individual path lookup or
+            // attribute write fails.
+            console.warn('[backfillAttrs] weekly path lookup failed', repDay.format('YYYY-MM-DD'), e);
+          }
+        }
+
+        cursor = cursor.add(7, 'day');
+      }
+    }
+
+    // Apply the same path-first strategy to monthly notes. Iterate from
+    // 2025-01 through the current month so ordinary configured paths are
+    // resolved by the exact renderer rather than inferred from filenames.
+    if (monthlyPattern) {
+      let cursor = dayjs('2025-01-01').startOf('month');
+      const lastMonth = dayjs().startOf('month');
+      while (cursor.valueOf() <= lastMonth.valueOf()) {
+        const monthKey = cursor.format('YYYYMM');
+        if (!existingMonthlyKeys.has(monthKey)) {
+          try {
+            const hPath = await this.getMonthlySavePath(cursor.toDate());
+            const docID = await this.getDocIdByHPath(hPath);
+            if (docID && !existingMonthlyKeys.has(monthKey)) {
+              await setCustomMonthlyAttr(docID, monthKey);
+              existingMonthlyKeys.add(monthKey);
+              counts.monthly++;
+            }
+          } catch (e) {
+            console.warn('[backfillAttrs] monthly path lookup failed', monthKey, e);
+          }
+        }
+        cursor = cursor.add(1, 'month');
+      }
+    }
+
+    // Apply the same path-first strategy to yearly notes. Iterate from 2025
+    // through the current year, then let the regex fallback handle older or
+    // otherwise unusual paths.
+    if (yearlyPattern) {
+      let cursor = dayjs('2025-01-01').startOf('year');
+      const lastYear = dayjs().startOf('year');
+      while (cursor.valueOf() <= lastYear.valueOf()) {
+        const yearKey = cursor.format('YYYY');
+        if (!existingYearlyKeys.has(yearKey)) {
+          try {
+            const hPath = await this.getYearlySavePath(cursor.toDate());
+            const docID = await this.getDocIdByHPath(hPath);
+            if (docID && !existingYearlyKeys.has(yearKey)) {
+              await setCustomYearlyAttr(docID, yearKey);
+              existingYearlyKeys.add(yearKey);
+              counts.yearly++;
+            }
+          } catch (e) {
+            console.warn('[backfillAttrs] yearly path lookup failed', yearKey, e);
+          }
+        }
+        cursor = cursor.add(1, 'year');
+      }
+    }
+
     // Backfill docs that match the path pattern and don't conflict with existing periods.
     for (const [id, { hpath, attrs }] of docAttrs.entries()) {
       if (!hpath) continue;

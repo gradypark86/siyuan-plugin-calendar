@@ -22,7 +22,11 @@ A SiYuan Note calendar panel plugin that allows quick creation of periodic notes
 - Custom Configuration
   - Configure the time when a new day begins
 - Support for all platforms
-- Since v0.5.0, periodic notes created through the panel automatically get document attributes. The panel looks up attributes first and falls back to the storage path when none exist. Before changing the storage path or the week-number rule, use "Backfill Attributes" under Advanced Settings to add attributes to periodic notes created before v0.5.0, so the panel can still find existing weekly notes instead of creating blank ones.
+- Document attributes and “Backfill Attributes”
+  - Since v0.5.0, periodic notes created through the panel automatically get document attributes. For periodic notes that already have attributes, the panel can still locate and open the original note through its attributes even if you later change its title or storage path.
+  - When loading week numbers, the panel first uses document attributes to determine whether a weekly note exists. For historical weekly notes without attributes, clicking the corresponding week number attempts a storage-path lookup and automatically backfills the attributes when the note is found.
+  - “Backfill Attributes” iterates through the configured weekly, monthly, and yearly paths from January 2025 onward, then scans common storage-path formats with regular-expression rules to cover as many older or specially named periodic notes as possible.
+  - Before changing periodic-note paths or the week-number rule, we recommend running “Backfill Attributes” under Advanced Settings to avoid creating blank weekly notes when existing notes cannot be located. Custom paths that cannot be recognized automatically may still require clicking the corresponding periodic-note entry to backfill manually.
 
 ## References and Thanks
 
