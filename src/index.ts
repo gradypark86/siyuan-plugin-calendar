@@ -30,6 +30,7 @@ import { request } from './api/api';
 import './index.less';
 import showMessage from 'siyuan';
 import { normalizeDayRolloverHour, normalizeDayRolloverMinute } from './utils/dayRollover';
+import { ensureSpeedSwitchModule, unregisterSpeedSwitchModule } from './integrations/speed-switch';
 
 const STORAGE_NAME = 'arco-calendar-entry';
 
@@ -46,9 +47,19 @@ export default class ArcoCalendarPlugin extends Plugin {
     eventBus.value = this.eventBus;
     isMobile.value = ['mobile', 'browser-mobile'].includes(getFrontend());
     await this.init();
+    // Optional integration: the Calendar plugin remains fully usable when
+    // LvSpeed Switch is absent or does not expose the home-module API.
+    ensureSpeedSwitchModule(() => this.openCalendar());
+  }
+
+  onLayoutReady() {
+    // LvSpeed Switch may finish loading after Calendar's onload. This call
+    // joins the bounded retry started above (if one is still pending).
+    ensureSpeedSwitchModule(() => this.openCalendar());
   }
 
   onunload() {
+    unregisterSpeedSwitchModule();
     console.log(this.i18n.byePlugin);
     this.menuVueApp?.unmount();
     this.menuVueApp = null;
@@ -357,6 +368,31 @@ export default class ArcoCalendarPlugin extends Plugin {
       confirmCreateDailyNote: Boolean(confirmCreateDailyNote.value),
     };
     await this.saveData(STORAGE_NAME, saveObj);
+  }
+
+  private openCalendar() {
+    if (!this.menuEle) return;
+
+    let rect = this.topEle?.getBoundingClientRect();
+    // If the top-bar button is hidden in the overflow menu, use that menu's
+    // rectangle just as the normal top-bar callback does.
+    if (!rect || rect.width === 0) {
+      const more = document.querySelector('#barMore') as HTMLElement | null;
+      if (!more) return;
+      rect = more.getBoundingClientRect();
+    }
+
+    const menu = new Menu('Calendar');
+    menu.addItem({ element: this.menuEle });
+    if (isMobile.value) {
+      menu.fullscreen();
+    } else {
+      menu.open({
+        x: rect.left,
+        y: rect.bottom,
+        isLeft: true,
+      });
+    }
   }
 
   private addTopItem(direction: 'left' | 'right') {

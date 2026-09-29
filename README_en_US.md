@@ -22,6 +22,9 @@ A SiYuan Note calendar panel plugin that allows quick creation of periodic notes
 - Custom Configuration
   - Configure the time when a new day begins
 - Support for all platforms
+- Optional LvSpeed Switch home widget
+  - When LvSpeed Switch is installed, Calendar registers a read-only “Recent periodic notes” widget. Add it from LvSpeed Switch's widget store to show attributed weekly, monthly, and yearly notes from the selected notebook; clicking an item opens the corresponding document.
+  - If LvSpeed Switch is absent or incompatible, Calendar's calendar and periodic-note features continue to work normally. Run “Backfill Attributes” first if historical periodic notes do not yet have document attributes.
 - Document attributes and “Backfill Attributes”
   - Since v0.5.0, periodic notes created through the panel automatically get document attributes. For periodic notes that already have attributes, the panel can still locate and open the original note through its attributes even if you later change its title or storage path.
   - When loading week numbers, the panel first uses document attributes to determine whether a weekly note exists. For historical weekly notes without attributes, clicking the corresponding week number attempts a storage-path lookup and automatically backfills the attributes when the note is found.
