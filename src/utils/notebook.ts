@@ -18,6 +18,91 @@ import {
 } from '@/hooks/useSiYuan';
 import { getCalendarWeekNum, getWeekInfo, getWeekIsoKey } from '@/utils/weekNum';
 
+export type PeriodicNoteKind = 'weekly' | 'monthly' | 'yearly';
+
+export interface RecentPeriodicNote {
+  id: string;
+  title: string;
+  kind: PeriodicNoteKind;
+  key: string;
+  created: string;
+  updated: string;
+}
+
+function normalizeQueryLimit(limit: number, fallback = 12): number {
+  const value = Number.isFinite(limit) ? Math.floor(limit) : fallback;
+  return Math.max(1, Math.min(24, value || fallback));
+}
+
+function getDocumentTitle(content: unknown, hpath: unknown, id: string): string {
+  const contentTitle = String(content || '').replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
+  if (contentTitle) return contentTitle.slice(0, 160);
+
+  const path = String(hpath || '').replace(/[\\/]+$/, '');
+  const pathTitle = path.split(/[\\/]/).filter(Boolean).pop()?.trim();
+  return (pathTitle || id).slice(0, 160);
+}
+
+/**
+ * Read recent periodic-note documents identified by Calendar's attributes.
+ *
+ * This intentionally does not perform path rendering or legacy path scans.
+ * The method is used by the optional home-widget integration, whose provider
+ * must return a small read-only snapshot quickly. Historical notes without
+ * attributes are handled by the existing Backfill Attributes action.
+ */
+export async function queryRecentPeriodicNotes(notebookId: NotebookId, limit = 12): Promise<RecentPeriodicNote[]> {
+  const safeNotebookId = String(notebookId || '').replace(/'/g, "''");
+  if (!safeNotebookId) return [];
+
+  const resultLimit = normalizeQueryLimit(limit);
+  // A document can carry more than one periodic attribute. Fetch a bounded
+  // multiple, then de-duplicate by document id before applying the public
+  // result limit. This keeps the query bounded without returning duplicates.
+  const queryLimit = Math.min(48, resultLimit * 3);
+  const rows = await api.sql(
+    `SELECT b.id, b.content, b.hpath, b.created, b.updated, a.name AS attr_name
+     FROM blocks b
+     INNER JOIN attributes a ON b.id = a.block_id
+     WHERE b.type='d' AND b.box='${safeNotebookId}'
+       AND (a.name LIKE 'custom-calendar-weekly-%'
+         OR a.name LIKE 'custom-calendar-monthly-%'
+         OR a.name LIKE 'custom-calendar-yearly-%')
+     ORDER BY b.created DESC, b.id DESC
+     LIMIT ${queryLimit}`
+  );
+
+  if (!Array.isArray(rows) || rows.length === 0) return [];
+
+  const notes = new Map<string, RecentPeriodicNote>();
+  for (const raw of rows as Array<Record<string, unknown>>) {
+    const id = String(raw.id || '').trim();
+    const attrName = String(raw.attr_name || '').trim();
+    if (!id) continue;
+
+    const match = attrName.match(/^custom-calendar-(weekly|monthly|yearly)-(.+)$/);
+    if (!match) continue;
+
+    const note: RecentPeriodicNote = {
+      id,
+      title: getDocumentTitle(raw.content, raw.hpath, id),
+      kind: match[1] as PeriodicNoteKind,
+      key: match[2],
+      created: String(raw.created || ''),
+      updated: String(raw.updated || ''),
+    };
+
+    const previous = notes.get(id);
+    if (!previous || note.created > previous.created || (note.created === previous.created && note.updated > previous.updated)) {
+      notes.set(id, note);
+    }
+  }
+
+  return [...notes.values()]
+    .sort((a, b) => b.created.localeCompare(a.created) || b.updated.localeCompare(a.updated) || b.id.localeCompare(a.id))
+    .slice(0, resultLimit);
+}
+
 function isPathInTemplatesDir(filePath: string, templatesDir: string): boolean {
   const normalize = (value: string) => value.replace(/\\/g, '/').replace(/\/+$/, '');
   const candidate = normalize(String(filePath || ''));
@@ -392,6 +477,11 @@ export class CusNotebook implements Notebook, NotebookConf {
       }
     }
     return map;
+  }
+
+  /** Return a bounded list of recent periodic notes for this notebook. */
+  async getRecentPeriodicNotes(limit = 12): Promise<RecentPeriodicNote[]> {
+    return queryRecentPeriodicNotes(this.id, limit);
   }
 
   private async setWeeklyNoteAttr(docID: string, date: Date): Promise<void> {
