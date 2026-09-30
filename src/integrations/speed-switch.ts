@@ -147,7 +147,7 @@ function createHomeModuleOptions(openCalendar?: () => void): HomeModuleOptions {
       pluginId: 'siyuan-plugin-calendar',
       name: 'Calendar',
       icon: 'iconCalendar',
-      version: '0.5.1',
+      version: '0.5.2',
       homepage: 'https://github.com/gradypark86/siyuan-plugin-calendar',
     },
     readOnly: true,
