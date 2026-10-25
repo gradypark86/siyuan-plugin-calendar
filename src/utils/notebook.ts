@@ -512,7 +512,7 @@ export class CusNotebook implements Notebook, NotebookConf {
       if (hasOtherWeekly) {
         // This doc belongs to a different week. Create a new doc for this week.
         const newId = await api.createDocWithMd(this.id, hPath, '');
-        await this.applyTemplate(newId, weeklyTemplatePath.value);
+        await this.applyTemplateIfDocEmpty(newId, weeklyTemplatePath.value);
         await this.setWeeklyNoteAttr(newId, date);
         return newId;
       }
@@ -535,7 +535,7 @@ export class CusNotebook implements Notebook, NotebookConf {
 
     // No existing doc found. Create a new one at the canonical path.
     const docID = await api.createDocWithMd(this.id, hPath, '');
-    await this.applyTemplate(docID, weeklyTemplatePath.value);
+    await this.applyTemplateIfDocEmpty(docID, weeklyTemplatePath.value);
     await this.setWeeklyNoteAttr(docID, date);
     return docID;
   }
@@ -618,7 +618,7 @@ export class CusNotebook implements Notebook, NotebookConf {
       if (hasOtherMonthly) {
         // This doc belongs to a different month. Create a new doc for this month.
         const newId = await api.createDocWithMd(this.id, hPath, '');
-        await this.applyTemplate(newId, monthlyTemplatePath.value);
+        await this.applyTemplateIfDocEmpty(newId, monthlyTemplatePath.value);
         await setCustomMonthlyAttr(newId, monthKey);
         return newId;
       }
@@ -628,7 +628,7 @@ export class CusNotebook implements Notebook, NotebookConf {
     }
 
     const docID = await api.createDocWithMd(this.id, hPath, '');
-    await this.applyTemplate(docID, monthlyTemplatePath.value);
+    await this.applyTemplateIfDocEmpty(docID, monthlyTemplatePath.value);
     await setCustomMonthlyAttr(docID, monthKey);
     return docID;
   }
@@ -688,7 +688,7 @@ export class CusNotebook implements Notebook, NotebookConf {
       if (hasOtherYearly) {
         // This doc belongs to a different year. Create a new doc for this year.
         const newId = await api.createDocWithMd(this.id, hPath, '');
-        await this.applyTemplate(newId, yearlyTemplatePath.value);
+        await this.applyTemplateIfDocEmpty(newId, yearlyTemplatePath.value);
         await setCustomYearlyAttr(newId, yearKey);
         return newId;
       }
@@ -698,7 +698,7 @@ export class CusNotebook implements Notebook, NotebookConf {
     }
 
     const docID = await api.createDocWithMd(this.id, hPath, '');
-    await this.applyTemplate(docID, yearlyTemplatePath.value);
+    await this.applyTemplateIfDocEmpty(docID, yearlyTemplatePath.value);
     await setCustomYearlyAttr(docID, yearKey);
     return docID;
   }
@@ -717,7 +717,7 @@ export class CusNotebook implements Notebook, NotebookConf {
     // Ensure weekly here (create or backfill template if empty) so path overlap
     // does not permanently skip weekly template rendering.
     await this.refreshWeeklyPathOverlap(date);
-    if ((includeWeekly || autoCreateWeeklyForced.value) && weeklyEnabled.value && String(weeklyPath.value || '').trim()) {
+    if (includeWeekly && weeklyEnabled.value && String(weeklyPath.value || '').trim()) {
       await this.createWeeklyNote(date);
     }
   }

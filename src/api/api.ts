@@ -59,14 +59,77 @@ export async function setNotebookConf(notebook: NotebookId, conf: NotebookConf):
 }
 
 // **************************************** File Tree ****************************************
+let structuredDocumentAddressingSupported: Promise<boolean> | undefined;
+
+async function supportsStructuredDocumentAddressing(): Promise<boolean> {
+  if (!structuredDocumentAddressingSupported) {
+    structuredDocumentAddressingSupported = version().then(versionString => {
+      const match = String(versionString || '').match(/^(\d+)\.(\d+)\.(\d+)(?:-alpha\.(\d+))?/i);
+      if (!match) return false;
+
+      const [, majorText, minorText, patchText, alphaText] = match;
+      const actual = [Number(majorText), Number(minorText), Number(patchText)];
+      const required = [3, 8, 9];
+      for (let index = 0; index < required.length; index += 1) {
+        if (actual[index] !== required[index]) return actual[index] > required[index];
+      }
+
+      // Legacy path addressing is unsupported starting with v3.8.9-alpha.7.
+      if (alphaText !== undefined) return Number(alphaText) >= 7;
+      return true;
+    }).catch(() => false);
+  }
+  return structuredDocumentAddressingSupported;
+}
+
 export async function createDocWithMd(notebook: NotebookId, path: string, markdown: string): Promise<DocumentId> {
-  const data = {
-    notebook: notebook,
-    path: path,
-    markdown: markdown,
-  };
-  const url = '/api/filetree/createDocWithMd';
-  return request(url, data);
+  const normalizedPath = String(path || '').replace(/\\/g, '/');
+  if (!(await supportsStructuredDocumentAddressing())) {
+    return request('/api/filetree/createDocWithMd', { notebook, path: normalizedPath, markdown });
+  }
+
+  const parts = normalizedPath.split('/').map(part => part.trim()).filter(Boolean);
+  if (!parts.length) {
+    throw new Error('Document path must contain a title');
+  }
+
+  // Since v3.8.9-alpha.7, legacy path addressing is rejected. Create each
+  // missing path segment through the structured parent-ID endpoint instead.
+  let parentID: string | null = null;
+  let currentPath = '';
+  for (let index = 0; index < parts.length; index += 1) {
+    const title = parts[index];
+    currentPath += `/${title}`;
+    const safeNotebook = String(notebook).replace(/'/g, "''");
+    const safePath = currentPath.replace(/'/g, "''");
+    const existing = await request('/api/query/sql', {
+      stmt: `SELECT id FROM blocks WHERE type='d' AND box='${safeNotebook}' AND hpath='${safePath}' LIMIT 1`,
+    });
+    if (Array.isArray(existing) && existing[0]?.id) {
+      parentID = existing[0].id;
+      continue;
+    }
+
+    const data = {
+      notebook,
+      parentID,
+      id: window.Lute.NewNodeID(),
+      title: { format: 'plain', text: title },
+      markdown: index === parts.length - 1 ? markdown : '',
+    };
+    const created = await request('/api/filetree/createDocByParent', data);
+    const createdID = typeof created === 'string' ? created : created?.id || created?.document?.id;
+    if (createdID) {
+      parentID = createdID;
+      continue;
+    }
+
+    // Keep compatibility with kernels predating structured document addressing.
+    const legacy = await request('/api/filetree/createDocWithMd', { notebook, path: normalizedPath, markdown });
+    if (legacy) return legacy;
+    throw new Error('Failed to create document');
+  }
+  return parentID as DocumentId;
 }
 
 export async function renameDoc(notebook: NotebookId, path: string, title: string): Promise<DocumentId> {
