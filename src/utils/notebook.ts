@@ -116,6 +116,45 @@ function getTemplateRelativePath(filePath: string): string | undefined {
   return match?.[1];
 }
 
+/**
+ * Document-level attributes a template may declare, which the body render path
+ * cannot carry over to the new document.
+ *
+ * Only attributes that describe the document itself are allowed through;
+ * structural keys (`id`, `type`, `updated`, `title`, ...) are ignored so a
+ * template can never corrupt the new document's identity.
+ */
+const DOC_ATTR_ALLOWLIST = ['icon', 'title-img'];
+const DOC_ATTR_PATTERN = /([A-Za-z0-9_-]+)\s*=\s*"([^"]*)"/g;
+
+/**
+ * Extract document attributes from the doc-level inline attribute list(s) of a
+ * raw markdown template, e.g. `{: icon="1f4c6" type="doc"}`.
+ */
+function extractDocAttrs(raw: string): Record<string, string> {
+  const attrs: Record<string, string> = {};
+  if (!raw) return attrs;
+
+  // Doc IAL blocks are short; bounding the span keeps unrelated `{:` ... `}`
+  // pairs (code blocks, JSON snippets) from swallowing the attribute line.
+  const blockPattern = /\{:([\s\S]{0,2000}?)\}/g;
+  let block: RegExpExecArray | null;
+  while ((block = blockPattern.exec(raw))) {
+    const body = block[1] || '';
+    if (!/\btype\s*=\s*"doc"/.test(body)) continue;
+
+    DOC_ATTR_PATTERN.lastIndex = 0;
+    let match: RegExpExecArray | null;
+    while ((match = DOC_ATTR_PATTERN.exec(body))) {
+      const key = match[1];
+      if (DOC_ATTR_ALLOWLIST.includes(key) || key.startsWith('custom-')) {
+        attrs[key] = match[2];
+      }
+    }
+  }
+  return attrs;
+}
+
 async function getTemplatesDir(): Promise<string> {
   const system = await api.request('/api/system/getConf');
   let dataDir = String(system?.conf?.system?.dataDir || '').replace(/[\\/]+$/, '');
@@ -259,6 +298,30 @@ export class CusNotebook implements Notebook, NotebookConf {
     return templatesDir + tplPath;
   }
 
+  /**
+   * Copy document-level attributes (icon, title-img, custom-*) declared in the
+   * template's root IAL onto the target document.
+   *
+   * `api.render` only renders the template body, so a `{: icon="..." type="doc"}`
+   * line never reaches the document itself. Reading the raw template keeps this
+   * independent of the body: an attributes-only template still themes the note.
+   */
+  private async applyTemplateDocAttrs(docID: string, tplPath: string): Promise<void> {
+    try {
+      const relativePath = getTemplateRelativePath(tplPath);
+      if (!relativePath) return;
+
+      const raw = await api.getFileText(`/data/templates/${relativePath}`);
+      const attrs = extractDocAttrs(raw);
+      if (Object.keys(attrs).length === 0) return;
+
+      await api.setBlockAttrs(docID, attrs);
+    } catch (e) {
+      // Document theming is best-effort: never fail note creation over it.
+      console.warn('[calendar] failed to apply document attributes from template', e);
+    }
+  }
+
   private async applyTemplate(docID: string, templatePath: string): Promise<void> {
     const tplPath = await this.resolveTemplatePath(templatePath);
     if (!tplPath) return;
@@ -267,6 +330,7 @@ export class CusNotebook implements Notebook, NotebookConf {
     if (res && res.content) {
       await api.prependBlock('dom', res.content, docID);
     }
+    await this.applyTemplateDocAttrs(docID, tplPath);
   }
 
   /**
@@ -307,6 +371,7 @@ export class CusNotebook implements Notebook, NotebookConf {
     if (res && res.content) {
       await api.prependBlock('dom', res.content, docID);
     }
+    await this.applyTemplateDocAttrs(docID, tplPath);
   }
 
   /**

@@ -360,6 +360,41 @@ export async function getFile(path: string): Promise<any> {
   }
 }
 
+/**
+ * Read a plain-text workspace file (e.g. a markdown template) as raw text.
+ *
+ * `/api/file/getFile` answers raw text for text files and a JSON error payload
+ * for failures, so it cannot go through `fetchSyncPost` (which always parses
+ * JSON). This helper keeps the raw body and only treats an explicit JSON error
+ * as a miss.
+ */
+export async function getFileText(path: string): Promise<string> {
+  try {
+    const response = await fetch('/api/file/getFile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: path }),
+    });
+    if (!response.ok) return '';
+
+    const text = await response.text();
+    if (text.startsWith('{')) {
+      try {
+        const json = JSON.parse(text);
+        if (json && typeof json === 'object' && typeof json.code === 'number') {
+          if (json.code !== 0) return '';
+          return typeof json.data === 'string' ? json.data : '';
+        }
+      } catch {
+        // Not JSON: it is the file body, keep it below.
+      }
+    }
+    return text;
+  } catch (error_msg) {
+    return '';
+  }
+}
+
 export async function putFile(path: string, isDir: boolean, file: any) {
   const form = new FormData();
   form.append('path', path);
